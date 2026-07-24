@@ -1,31 +1,23 @@
 import { Outlet } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import { Navbar } from "./Navbar";
+import { Footer } from "./Footer";
 
 export function AppLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 border-r">
-          Sidebar
-        </aside>
+    <div className="flex h-screen bg-slate-50/50 font-sans antialiased text-slate-800 overflow-hidden">
+      {/* Sidebar Fijo */}
+      <Sidebar />
 
-        {/* Contenido */}
-        <div className="flex min-h-screen flex-1 flex-col">
-          {/* Navbar */}
-          <header className="h-16 border-b px-6 flex items-center">
-            Navbar
-          </header>
+      {/* Área Principal (Navbar + Contenido + Footer) */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        <Navbar />
 
-          {/* Página */}
-          <main className="flex-1 p-6">
-            <Outlet />
-          </main>
+        <main className="flex-1 p-6 md:p-8">
+          <Outlet />
+        </main>
 
-          {/* Footer */}
-          <footer className="h-12 border-t px-6 flex items-center text-sm text-muted-foreground">
-            Sistema de Mantenimientos
-          </footer>
-        </div>
+        <Footer />
       </div>
     </div>
   );
