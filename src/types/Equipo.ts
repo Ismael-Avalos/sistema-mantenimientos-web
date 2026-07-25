@@ -1,3 +1,5 @@
+import type { Ubicacion } from "./Ubicacion";
+
 export interface Equipo {
   id: string;
   qrUuid: string;
@@ -9,5 +11,11 @@ export interface Equipo {
   serialEquipo: string;
   estado: string;
   fechaAdquisicion: string;
+  ubicacion?: Ubicacion | null;
   createdAt: string;
+}
+
+// ✅ Definición profesional utilizando interfaz y extensiones de Omit
+export interface CrearEquipoDTO extends Omit<Equipo, "id" | "qrUuid" | "createdAt" | "ubicacion"> {
+  ubicacionId?: string | null;
 }

@@ -1,7 +1,8 @@
 import { api } from "./api";
-import type { Equipo } from "../types/Equipo";
+import type { Equipo, CrearEquipoDTO } from "../types/Equipo";
 
-export type CrearEquipoDTO = Omit<Equipo, "id" | "qrUuid" | "createdAt">;
+// Re-exportamos el DTO para facilitar la importación en componentes
+export type { CrearEquipoDTO };
 
 export async function obtenerEquipos(): Promise<Equipo[]> {
   const response = await api.get("/maintenances/assets");
