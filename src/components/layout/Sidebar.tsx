@@ -89,7 +89,7 @@ export function Sidebar() {
             </div>
             <div className="truncate">
               <p className="text-xs font-semibold text-slate-800 truncate">Administrador</p>
-              <p className="text-[10px] text-slate-400 truncate">admin@institucion.edu</p>
+              <p className="text-[10px] text-slate-400 truncate">admin@uma.edu.sv</p>
             </div>
           </div>
           <button title="Cerrar sesión" className="p-1.5 text-slate-400 hover:text-red-700 rounded-lg">
