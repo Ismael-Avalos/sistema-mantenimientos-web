@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
-import {  
+import { NavLink, useNavigate } from "react-router-dom";
+import { 
   Cpu, 
   FolderTree, 
   MapPin, 
@@ -9,8 +9,59 @@ import {
   LogOut,
   UserLock
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+
+// 1. Helper blindado para obtener el primer nombre y primer apellido (ej: René Pinto)
+const obtenerNombreCorto = (nombreCompleto?: any): string => {
+  if (!nombreCompleto || typeof nombreCompleto !== "string") return "Usuario";
+  const partes = nombreCompleto.trim().split(/\s+/);
+  
+  if (partes.length === 1) return partes[0];
+  if (partes.length === 2) return `${partes[0]} ${partes[1]}`;
+  
+  // Si tiene 3 o más palabras (ej: René Ismael Pinto Ávalos), toma el 1ro y 3ro
+  return `${partes[0]} ${partes[2]}`;
+};
+
+// 2. Helper blindado para obtener la etiqueta del panel según el Rol (String u Objeto)
+const obtenerEtiquetaPanel = (rol?: any): string => {
+  if (!rol) return "PANEL CONTROL";
+
+  // Si 'rol' viene como objeto (ej: { id: 1, nombre: "ADMIN" }), extraemos el texto de forma segura
+  const rolTexto = typeof rol === "string" 
+    ? rol 
+    : (rol?.nombre || rol?.name || String(rol));
+
+  const rolUpper = String(rolTexto).toUpperCase();
+
+  if (rolUpper.includes("ADMIN")) return "PANEL ADMIN";
+  if (rolUpper.includes("TECNICO") || rolUpper.includes("TÉCNICO")) return "PANEL TÉCNICO";
+  return `PANEL ${rolUpper}`;
+};
+
+// 3. Helper para generar las iniciales (ej: René Pinto -> RP)
+const obtenerIniciales = (nombreCorto: string): string => {
+  const partes = nombreCorto.split(" ");
+  if (partes.length >= 2) {
+    return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
+  }
+  return nombreCorto.substring(0, 2).toUpperCase();
+};
 
 export function Sidebar() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
+  // Valores calculados basados en el usuario de sesión de forma segura
+  const nombreMostrar = obtenerNombreCorto(user?.nombre);
+  const iniciales = obtenerIniciales(nombreMostrar);
+  const etiquetaPanel = obtenerEtiquetaPanel(user?.rol);
+
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
       isActive
@@ -28,7 +79,9 @@ export function Sidebar() {
           </div>
           <div>
             <h2 className="font-bold text-slate-800 text-sm leading-tight">Mantenimientos</h2>
-            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Panel Admin</p>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+              {etiquetaPanel}
+            </p>
           </div>
         </div>
 
@@ -84,15 +137,27 @@ export function Sidebar() {
       <div className="p-4 border-t border-slate-100">
         <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50">
           <div className="flex items-center gap-2.5 overflow-hidden">
+            {/* Badge de Iniciales */}
             <div className="w-8 h-8 rounded-lg bg-red-100/40 text-red-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-              AD
+              {iniciales}
             </div>
+
+            {/* Nombre y Correo */}
             <div className="truncate">
-              <p className="text-xs font-semibold text-slate-800 truncate">Administrador</p>
-              <p className="text-[10px] text-slate-400 truncate">admin@uma.edu.sv</p>
+              <p className="text-xs font-semibold text-slate-800 truncate" title={nombreMostrar}>
+                {nombreMostrar}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate" title={user?.correo}>
+                {user?.correo || "correo@ejemplo.com"}
+              </p>
             </div>
           </div>
-          <button title="Cerrar sesión" className="p-1.5 text-slate-400 hover:text-red-700 rounded-lg">
+
+          <button 
+            title="Cerrar sesión" 
+            onClick={handleLogout}
+            className="p-1.5 text-slate-400 hover:text-red-700 hover:bg-rose-50 rounded-lg transition-colors flex-shrink-0"
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
