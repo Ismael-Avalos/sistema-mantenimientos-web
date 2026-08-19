@@ -6,8 +6,9 @@ export const ProtectedRoute = () => {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  // Guardamos a qué ruta intentaba ir antes de mandarlo al login
+  return <Navigate to="/login" state={{ from: location }} replace />;
+}
 
   // Redirección obligatoria si la bandera de la BD 'debeCambiarContrasena' es true
   if (user?.debeCambiarContrasena && location.pathname !== '/cambiar-contrasena') {

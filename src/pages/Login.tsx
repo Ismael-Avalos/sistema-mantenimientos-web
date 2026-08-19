@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Wrench, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,8 +13,13 @@ export const Login: React.FC = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  // Obtiene la ruta de origen a la que intentaba acceder el usuario (p. ej. /mantenimiento/qr/xyz)
+  // Si no venía de ninguna ruta en particular, redirige a /equipos por defecto
+  const destino = location.state?.from?.pathname || '/equipos';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setCargando(true);
@@ -26,9 +31,10 @@ export const Login: React.FC = () => {
       login(token, usuario);
 
       if (usuario.debeCambiarContrasena) {
-        navigate('/cambiar-contrasena');
+        navigate('/cambiar-contrasena', { replace: true });
       } else {
-        navigate('/dashboard');
+        // Redirige al destino previo guardado (la vista del QR) o al listado principal
+        navigate(destino, { replace: true });
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Credenciales inválidas. Verifica tu correo y contraseña.');

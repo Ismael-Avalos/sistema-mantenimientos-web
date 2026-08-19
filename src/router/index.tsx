@@ -8,6 +8,8 @@ import { CambiarContrasena } from "@/pages/CambiarContrasena";
 import Equipos from "@/pages/Equipos";
 import Ubicaciones from "@/pages/Ubicaciones";
 import Usuarios from "@/pages/Usuarios";
+import Categorias from "@/pages/Categorias";
+import { DetalleEquipoQr } from "@/pages/DetalleEquipoQr";
 
 export const router = createBrowserRouter([
   // 1. Ruta Pública
@@ -20,10 +22,15 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      // Vista especial si debe cambiar clave primeramente
       {
         path: "/cambiar-contrasena",
         element: <CambiarContrasena />,
+      },
+
+      // 📌 Ruta protegida para el QR (Limpia, sin Sidebar/Navbar para pantalla móvil)
+      {
+        path: "/mantenimiento/qr/:uuid",
+        element: <DetalleEquipoQr />,
       },
 
       // Vistas principales dentro de tu AppLayout (Sidebar + Navbar)
@@ -46,6 +53,10 @@ export const router = createBrowserRouter([
           {
             path: "usuarios",
             element: <Usuarios />,
+          },
+          {
+            path: "categorias",
+            element: <Categorias />,
           },
         ],
       },

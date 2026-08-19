@@ -1,4 +1,5 @@
 import { AlertTriangle, Loader2 } from "lucide-react";
+import React from "react";
 
 interface Props {
   isOpen: boolean;
@@ -6,7 +7,9 @@ interface Props {
   onConfirm: () => void;
   titulo?: string;
   mensaje?: string;
+  textoConfirmar?: string;
   cargando?: boolean;
+  children?: React.ReactNode;
 }
 
 export function ModalConfirmar({
@@ -15,7 +18,9 @@ export function ModalConfirmar({
   onConfirm,
   titulo = "¿Confirmar acción?",
   mensaje = "¿Estás seguro de realizar esta acción? Esta operación no se puede deshacer.",
+  textoConfirmar = "Eliminar",
   cargando = false,
+  children,
 }: Props) {
   if (!isOpen) return null;
 
@@ -30,7 +35,10 @@ export function ModalConfirmar({
 
         {/* Título y Mensaje */}
         <h3 className="text-lg font-bold text-slate-800 mb-1">{titulo}</h3>
-        <p className="text-xs text-slate-500 mb-6">{mensaje}</p>
+        <p className="text-xs text-slate-500 mb-4">{mensaje}</p>
+
+        {/* Contenido Adicional (ej: Select de reasignación) */}
+        {children && <div className="mb-6 text-left">{children}</div>}
 
         {/* Botones */}
         <div className="flex gap-2 justify-center">
@@ -49,7 +57,7 @@ export function ModalConfirmar({
             disabled={cargando}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl disabled:opacity-50 transition-colors shadow-sm"
           >
-            {cargando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Eliminar"}
+            {cargando ? <Loader2 className="w-4 h-4 animate-spin" /> : textoConfirmar}
           </button>
         </div>
 
