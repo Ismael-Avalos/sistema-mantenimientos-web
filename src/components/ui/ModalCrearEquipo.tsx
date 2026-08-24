@@ -43,6 +43,17 @@ export function ModalCrearEquipo({
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [cargandoRelaciones, setCargandoRelaciones] = useState(false);
 
+  // Cerrar con tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Carga de selects (Categorías y Ubicaciones)
   useEffect(() => {
     if (isOpen) {
@@ -98,7 +109,6 @@ export function ModalCrearEquipo({
     e.preventDefault();
     setGuardando(true);
 
-    // Formatear payload limpiando UUID vacíos para que Spring Boot no falle al mapear
     const payload: CrearEquipoDTO = {
       ...formData,
       ubicacionId: formData.ubicacionId ? formData.ubicacionId : null,
@@ -123,117 +133,165 @@ export function ModalCrearEquipo({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
-          <h2 className="text-lg font-bold text-slate-800">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-equipo-titulo"
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+        
+        {/* Encabezado fijo */}
+        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
+          <h2 id="modal-equipo-titulo" className="text-base sm:text-lg font-bold text-slate-800">
             {equipoAEditar ? "Editar Equipo" : "Agregar Nuevo Equipo"}
           </h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+          <button 
+            type="button"
+            onClick={onClose} 
+            aria-label="Cerrar modal"
+            className="p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+        {/* Formulario scrolleable */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Cód. Inventario</label>
+              <label htmlFor="codigoInventario" className="block text-xs font-medium text-slate-600 mb-1">
+                Cód. Inventario *
+              </label>
               <input
+                id="codigoInventario"
                 type="text"
                 name="codigoInventario"
                 required
                 value={formData.codigoInventario}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Nombre</label>
+              <label htmlFor="nombre" className="block text-xs font-medium text-slate-600 mb-1">
+                Nombre *
+              </label>
               <input
+                id="nombre"
                 type="text"
                 name="nombre"
                 required
                 value={formData.nombre}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Tipo</label>
+              <label htmlFor="tipo" className="block text-xs font-medium text-slate-600 mb-1">
+                Tipo *
+              </label>
               <input
+                id="tipo"
                 type="text"
                 name="tipo"
                 required
                 value={formData.tipo}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Marca</label>
+              <label htmlFor="marca" className="block text-xs font-medium text-slate-600 mb-1">
+                Marca
+              </label>
               <input
+                id="marca"
                 type="text"
                 name="marca"
                 value={formData.marca}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Modelo</label>
+              <label htmlFor="modelo" className="block text-xs font-medium text-slate-600 mb-1">
+                Modelo
+              </label>
               <input
+                id="modelo"
                 type="text"
                 name="modelo"
                 value={formData.modelo}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Nº Serie</label>
+              <label htmlFor="serialEquipo" className="block text-xs font-medium text-slate-600 mb-1">
+                Nº Serie
+              </label>
               <input
+                id="serialEquipo"
                 type="text"
                 name="serialEquipo"
                 value={formData.serialEquipo}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Estado</label>
+              <label htmlFor="estado" className="block text-xs font-medium text-slate-600 mb-1">
+                Estado
+              </label>
               <select
+                id="estado"
                 name="estado"
                 value={formData.estado}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               >
                 <option value="ACTIVO">ACTIVO</option>
                 <option value="EN_MANTENIMIENTO">EN MANTENIMIENTO</option>
                 <option value="DADO_DE_BAJA">DADO DE BAJA</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">F. Adquisición</label>
+              <label htmlFor="fechaAdquisicion" className="block text-xs font-medium text-slate-600 mb-1">
+                F. Adquisición *
+              </label>
               <input
+                id="fechaAdquisicion"
                 type="date"
                 name="fechaAdquisicion"
                 required
                 value={formData.fechaAdquisicion}
                 onChange={handleChange}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
             </div>
 
             {/* Selector de Categoría */}
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Categoría</label>
+              <label htmlFor="categoriaId" className="block text-xs font-medium text-slate-600 mb-1">
+                Categoría *
+              </label>
               <select
+                id="categoriaId"
                 name="categoriaId"
                 required
                 value={formData.categoriaId || ""}
                 onChange={handleChange}
                 disabled={cargandoRelaciones}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-300 disabled:bg-slate-100"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 disabled:bg-slate-100"
               >
                 <option value="" disabled>
                   {cargandoRelaciones ? "Cargando..." : "Selecciona categoría"}
@@ -248,13 +306,16 @@ export function ModalCrearEquipo({
 
             {/* Selector de Ubicación */}
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Ubicación</label>
+              <label htmlFor="ubicacionId" className="block text-xs font-medium text-slate-600 mb-1">
+                Ubicación
+              </label>
               <select
+                id="ubicacionId"
                 name="ubicacionId"
                 value={formData.ubicacionId || ""}
                 onChange={handleChange}
                 disabled={cargandoRelaciones}
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-300 disabled:bg-slate-100"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 disabled:bg-slate-100"
               >
                 <option value="">
                   {cargandoRelaciones ? "Cargando..." : "Sin ubicación"}
@@ -266,23 +327,28 @@ export function ModalCrearEquipo({
                 ))}
               </select>
             </div>
+
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+          {/* Footer de Acciones */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={guardando}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-lg disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl disabled:opacity-50 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
             >
               {guardando ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Guardando...</span>
+                </>
               ) : equipoAEditar ? (
                 "Actualizar"
               ) : (
@@ -291,6 +357,7 @@ export function ModalCrearEquipo({
             </button>
           </div>
         </form>
+
       </div>
     </div>
   );

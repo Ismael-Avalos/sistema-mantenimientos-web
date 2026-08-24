@@ -74,7 +74,6 @@ function Categorias() {
       await cargar();
       cerrarModalEliminar();
     } catch (error: any) {
-      // Si el backend rechaza el borrado por tener equipos asociados
       setRequiereReasignacion(true);
     } finally {
       setEliminando(false);
@@ -82,25 +81,26 @@ function Categorias() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
       
       {/* Encabezado */}
-      <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Categorías</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Categorías</h1>
           <p className="text-xs text-slate-500">Total registradas: {categorias.length}</p>
         </div>
 
         <button
+          type="button"
           onClick={handleNuevaCategoria}
-          className="flex items-center gap-2 bg-red-800 hover:bg-red-900 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 active:bg-red-950 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm min-h-[44px] cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
-          Agregar Categoría
+          <Plus className="w-4 h-4 shrink-0" />
+          <span>Agregar Categoría</span>
         </button>
       </div>
 
-      {/* Tabla */}
+      {/* Contenedor Principal */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         {cargando ? (
           <div className="flex justify-center p-8 text-red-800">
@@ -112,56 +112,107 @@ function Categorias() {
             <p className="text-sm">No hay categorías registradas aún.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="p-4">Nombre</th>
-                  <th className="p-4">Descripción</th>
-                  <th className="p-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {categorias.map((cat) => (
-                  <tr key={cat.id} className="hover:bg-slate-50/50">
-                    <td className="p-4 font-medium text-slate-800">
-                      <div className="flex items-center gap-2">
-                        <FolderTree className="w-4 h-4 text-slate-400" />
-                        {cat.nombre}
+          <div>
+            {/* VISTA MÓVIL (Tarjetas) */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {categorias.map((cat) => (
+                <div key={cat.id} className="p-4 space-y-3 bg-white">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="space-y-1.5 flex-1 pr-2">
+                      <div className="flex items-center gap-2 font-medium text-slate-800 text-sm">
+                        <FolderTree className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span className="break-words">{cat.nombre}</span>
                       </div>
-                    </td>
-                    <td className="p-4 text-slate-600">
-                      {cat.descripcion ? (
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-slate-400" />
-                          <span>{cat.descripcion}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 italic text-xs">Sin descripción</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleEditar(cat)}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setCategoriaAEliminar(cat)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      
+                      <div className="flex items-start gap-2 text-xs text-slate-600">
+                        <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        {cat.descripcion ? (
+                          <span className="break-words">{cat.descripcion}</span>
+                        ) : (
+                          <span className="text-slate-400 italic">Sin descripción</span>
+                        )}
                       </div>
-                    </td>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleEditar(cat)}
+                        className="p-2.5 text-slate-500 hover:text-blue-600 active:bg-blue-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        title="Editar categoría"
+                        aria-label={`Editar ${cat.nombre}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCategoriaAEliminar(cat)}
+                        className="p-2.5 text-slate-500 hover:text-red-600 active:bg-red-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        title="Eliminar categoría"
+                        aria-label={`Eliminar ${cat.nombre}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* VISTA ESCRITORIO (Tabla) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+                  <tr>
+                    <th className="p-4">Nombre</th>
+                    <th className="p-4">Descripción</th>
+                    <th className="p-4 text-right">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {categorias.map((cat) => (
+                    <tr key={cat.id} className="hover:bg-slate-50/50">
+                      <td className="p-4 font-medium text-slate-800">
+                        <div className="flex items-center gap-2">
+                          <FolderTree className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span>{cat.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-600">
+                        {cat.descripcion ? (
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                            <span>{cat.descripcion}</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic text-xs">Sin descripción</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleEditar(cat)}
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                            title="Editar categoría"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCategoriaAEliminar(cat)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                            title="Eliminar categoría"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -189,14 +240,15 @@ function Categorias() {
         cargando={eliminando}
       >
         {requiereReasignacion && (
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-700">
-              Categoría Destino
+          <div className="space-y-2 pt-2">
+            <label htmlFor="categoria-destino" className="block text-xs font-semibold text-slate-700">
+              Categoría Destino *
             </label>
             <select
+              id="categoria-destino"
               value={categoriaDestinoId}
               onChange={(e) => setCategoriaDestinoId(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800"
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 min-h-[44px]"
             >
               <option value="">-- Selecciona una categoría --</option>
               {categorias

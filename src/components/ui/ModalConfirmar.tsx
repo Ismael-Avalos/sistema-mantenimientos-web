@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import React from "react";
 
@@ -22,31 +23,53 @@ export function ModalConfirmar({
   cargando = false,
   children,
 }: Props) {
+  // Listener para cerrar con la tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen && !cargando) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, cargando]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100 p-6 text-center animate-in fade-in zoom-in-95 duration-150">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-confirmar-titulo"
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 p-6 text-center animate-in zoom-in-95 duration-150">
         
         {/* Ícono de Advertencia */}
-        <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 shrink-0">
           <AlertTriangle className="w-6 h-6" />
         </div>
 
-        {/* Título y Mensaje */}
-        <h3 className="text-lg font-bold text-slate-800 mb-1">{titulo}</h3>
-        <p className="text-xs text-slate-500 mb-4">{mensaje}</p>
+        {/* Contenido scrolleable */}
+        <div className="overflow-y-auto flex-1">
+          <h3 id="modal-confirmar-titulo" className="text-lg font-bold text-slate-800 mb-1">
+            {titulo}
+          </h3>
+          <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+            {mensaje}
+          </p>
 
-        {/* Contenido Adicional (ej: Select de reasignación) */}
-        {children && <div className="mb-6 text-left">{children}</div>}
+          {/* Contenido Adicional (ej: Select de reasignación) */}
+          {children && <div className="mb-4 text-left">{children}</div>}
+        </div>
 
-        {/* Botones */}
-        <div className="flex gap-2 justify-center">
+        {/* Acciones */}
+        <div className="flex flex-col-reverse sm:flex-row gap-2 justify-center pt-2 mt-2 border-t border-slate-50 shrink-0">
           <button
             type="button"
             onClick={onClose}
             disabled={cargando}
-            className="flex-1 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200"
+            className="w-full sm:flex-1 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 disabled:opacity-50 min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
           >
             Cancelar
           </button>
@@ -55,7 +78,7 @@ export function ModalConfirmar({
             type="button"
             onClick={onConfirm}
             disabled={cargando}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl disabled:opacity-50 transition-colors shadow-sm"
+            className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl disabled:opacity-50 transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
           >
             {cargando ? <Loader2 className="w-4 h-4 animate-spin" /> : textoConfirmar}
           </button>

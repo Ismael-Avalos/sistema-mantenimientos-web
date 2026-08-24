@@ -10,7 +10,7 @@ import {
   Plus, 
   ArrowLeft,
   UserCheck,
-  FileText
+  FileText  
 } from "lucide-react";
 
 import { obtenerEquipoPorQrUuid } from "../services/equipos.service"; // Tu servicio existente de equipos
