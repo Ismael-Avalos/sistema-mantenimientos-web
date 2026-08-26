@@ -1,0 +1,294 @@
+controller:
+package com.umaso.mantenimientos.modules.maintenances.controller;
+
+import com.umaso.mantenimientos.modules.maintenances.dto.request.CreateMaintenanceRequest;
+import com.umaso.mantenimientos.modules.maintenances.dto.response.MaintenanceResponse;
+import com.umaso.mantenimientos.modules.maintenances.service.MaintenanceService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/mantenimientos")
+@RequiredArgsConstructor
+public class MaintenanceController {
+
+    private final MaintenanceService maintenanceService;
+
+    // Obtener historial de un equipo por su ID primario
+    @GetMapping("/equipo/{equipoId}")
+    public ResponseEntity<List<MaintenanceResponse>> obtenerPorEquipo(@PathVariable UUID equipoId) {
+        return ResponseEntity.ok(maintenanceService.obtenerHistorialPorEquipoId(equipoId));
+    }
+
+    // Obtener historial de un equipo escaneado mediante el UUID del QR
+    @GetMapping("/equipo/qr/{qrUuid}")
+    public ResponseEntity<List<MaintenanceResponse>> obtenerPorQrUuid(@PathVariable UUID qrUuid) {
+        return ResponseEntity.ok(maintenanceService.obtenerHistorialPorQrUuid(qrUuid));
+    }
+
+    // Obtener detalle de un mantenimiento por su ID
+    @GetMapping("/{id}")
+    public ResponseEntity<MaintenanceResponse> obtenerPorId(@PathVariable UUID id) {
+        return ResponseEntity.ok(maintenanceService.obtenerPorId(id));
+    }
+
+    // Registrar un nuevo mantenimiento
+    @PostMapping
+    public ResponseEntity<MaintenanceResponse> crear(@Valid @RequestBody CreateMaintenanceRequest request) {
+        MaintenanceResponse respuesta = maintenanceService.crearMantenimiento(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
+    }
+}
+
+service:
+package com.umaso.mantenimientos.modules.maintenances.service;
+
+import com.umaso.mantenimientos.modules.assets.entity.Asset;
+import com.umaso.mantenimientos.modules.assets.repository.AssetRepository;
+import com.umaso.mantenimientos.modules.maintenances.dto.request.CreateMaintenanceRequest;
+import com.umaso.mantenimientos.modules.maintenances.dto.response.MaintenanceResponse;
+import com.umaso.mantenimientos.modules.maintenances.entity.Maintenance;
+import com.umaso.mantenimientos.modules.maintenances.repository.MaintenanceRepository;
+import com.umaso.mantenimientos.modules.users.entity.User;
+import com.umaso.mantenimientos.modules.users.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class MaintenanceService {
+
+    private final MaintenanceRepository maintenanceRepository;
+    private final AssetRepository assetRepository;
+    private final UserRepository userRepository;
+
+    @Transactional(readOnly = true)
+    public List<MaintenanceResponse> obtenerHistorialPorEquipoId(UUID equipoId) {
+        return maintenanceRepository.findByEquipoIdOrderByFechaDesc(equipoId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MaintenanceResponse> obtenerHistorialPorQrUuid(UUID qrUuid) {
+        return maintenanceRepository.findByEquipoQrUuidOrderByFechaDesc(qrUuid)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MaintenanceResponse obtenerPorId(UUID id) {
+        Maintenance mantenimiento = maintenanceRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Mantenimiento no encontrado con ID: " + id
+                ));
+
+        return mapToResponse(mantenimiento);
+    }
+
+    @Transactional
+    public MaintenanceResponse crearMantenimiento(CreateMaintenanceRequest request) {
+        Asset equipo = assetRepository.findById(request.equipoId())
+                .orElseThrow(() -> new RuntimeException("El equipo especificado no existe."));
+
+        User responsable = null;
+        if (request.responsableId() != null) {
+            responsable = userRepository.findById(request.responsableId())
+                    .orElse(null);
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        Maintenance mantenimiento = Maintenance.builder()
+                .equipo(equipo)
+                .responsable(responsable)
+                .tipo(request.tipo())
+                .sede(request.sede())
+                .solicitanteNombre(request.solicitanteNombre())
+                .solicitanteCorreo(request.solicitanteCorreo())
+                .solicitanteTelefono(request.solicitanteTelefono())
+                .unidad(request.unidad())
+                .descripcionFalla(request.descripcionFalla())
+                .actividadesRealizadas(request.actividadesRealizadas())
+                .observacionesTecnicas(request.observacionesTecnicas())
+                .recomendaciones(request.recomendaciones())
+                .costo(request.costo())
+                .fecha(request.fecha() != null ? request.fecha() : ahora)
+                .fechaEntrega(request.fechaEntrega())
+                .createdAt(ahora)
+                .updatedAt(ahora)
+                .build();
+
+        Maintenance guardado = maintenanceRepository.saveAndFlush(mantenimiento);
+
+        Maintenance registroCompleto = maintenanceRepository.findById(guardado.getId())
+                .orElse(guardado);
+
+        return mapToResponse(registroCompleto);
+    }
+
+    private MaintenanceResponse mapToResponse(Maintenance m) {
+        String nombreResponsable = m.getResponsable() != null
+                ? m.getResponsable().getNombre()
+                : "Sin asignar";
+
+        return new MaintenanceResponse(
+                m.getId(),
+                m.getNumeroReporte(),
+                m.getTipo(),
+                m.getFecha(),
+                m.getFechaEntrega(),
+                m.getSede(),
+                m.getUnidad(),
+                m.getSolicitanteNombre(),
+                m.getSolicitanteCorreo(),
+                m.getSolicitanteTelefono(),
+                m.getDescripcionFalla(),
+                m.getActividadesRealizadas(),
+                m.getObservacionesTecnicas(),
+                m.getRecomendaciones(),
+                m.getCosto(),
+                m.getResponsable() != null ? m.getResponsable().getId() : null,
+                nombreResponsable
+        );
+    }
+}
+
+response:
+
+package com.umaso.mantenimientos.modules.maintenances.dto.response;
+
+import com.umaso.mantenimientos.modules.maintenances.entity.MaintenanceType;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record MaintenanceResponse(
+        UUID id,
+        Long numeroReporte,
+        MaintenanceType tipo,
+        LocalDateTime fecha,
+        LocalDateTime fechaEntrega,
+
+        String sede,
+        String unidad,
+        String solicitanteNombre,
+        String solicitanteCorreo,
+        String solicitanteTelefono,
+
+        String descripcionFalla,
+        String actividadesRealizadas,
+        String observacionesTecnicas,
+        String recomendaciones,
+
+        BigDecimal costo,
+
+        UUID responsableId,
+        String responsableNombre
+) {}
+
+
+request:
+
+package com.umaso.mantenimientos.modules.maintenances.dto.request;
+
+import com.umaso.mantenimientos.modules.maintenances.entity.MaintenanceType;
+import jakarta.validation.constraints.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record CreateMaintenanceRequest(
+
+        @NotNull(message = "El ID del equipo es obligatorio")
+        UUID equipoId,
+
+        UUID responsableId,
+
+        @NotNull(message = "El tipo de mantenimiento es obligatorio")
+        MaintenanceType tipo,
+
+        @NotBlank(message = "La sede es obligatoria")
+        @Size(max = 100, message = "La sede no debe superar los 100 caracteres")
+        String sede,
+
+        @NotBlank(message = "El nombre del solicitante es obligatorio")
+        @Size(max = 150)
+        String solicitanteNombre,
+
+        @NotBlank(message = "El correo del solicitante es obligatorio")
+        @Email(message = "Debe ingresar un correo electrónico válido")
+        @Size(max = 150)
+        String solicitanteCorreo,
+
+        @Size(max = 30)
+        String solicitanteTelefono,
+
+        @NotBlank(message = "La unidad o departamento es obligatorio")
+        @Size(max = 150)
+        String unidad,
+
+        @NotBlank(message = "La descripción de la falla es obligatoria")
+        String descripcionFalla,
+
+        @NotBlank(message = "Las actividades realizadas son obligatorias")
+        String actividadesRealizadas,
+
+        String observacionesTecnicas,
+
+        String recomendaciones,
+
+        @NotNull(message = "El costo es obligatorio")
+        @PositiveOrZero(message = "El costo no puede ser negativo")
+        BigDecimal costo,
+
+        LocalDateTime fecha,
+
+        LocalDateTime fechaEntrega
+) {}
+
+
+ejemplo 404:
+{
+  "timestamp": "2026-08-26T10:45:12.318",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Mantenimiento no encontrado con ID: c1c2be41-6e6e-4944-a9f9-6cc5a9c2738f"
+}
+
+ejemplo 200:
+{
+  "id": "c1c2be41-6e6e-4944-a9f9-6cc5a9c2738f",
+  "numeroReporte": 42,
+  "tipo": "CORRECTIVO",
+  "fecha": "2026-08-26T09:30:00",
+  "fechaEntrega": "2026-08-26T12:15:00",
+  "sede": "Sede Central",
+  "unidad": "Laboratorio de Informática",
+  "solicitanteNombre": "María López",
+  "solicitanteCorreo": "maria.lopez@institucion.edu",
+  "solicitanteTelefono": "7000-1234",
+  "descripcionFalla": "El equipo no enciende y emite tres pitidos.",
+  "actividadesRealizadas": "Se reemplazó el módulo de memoria RAM defectuoso.",
+  "observacionesTecnicas": "Equipo probado correctamente.",
+  "recomendaciones": "Realizar limpieza preventiva trimestral.",
+  "costo": 35.00,
+  "responsableId": "a92b9894-1279-42b7-9035-e9d7ceda2e3b",
+  "responsableNombre": "Carlos Hernández"
+}

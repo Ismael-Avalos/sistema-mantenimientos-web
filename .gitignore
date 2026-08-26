@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Documentación generada por IA
+AUDITORIA_FRONTEND.md
+CONTEXT_FRONTEND.md

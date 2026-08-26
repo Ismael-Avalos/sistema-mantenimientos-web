@@ -10,6 +10,7 @@ import Ubicaciones from "@/pages/Ubicaciones";
 import Usuarios from "@/pages/Usuarios";
 import Categorias from "@/pages/Categorias";
 import { DetalleEquipoQr } from "@/pages/DetalleEquipoQr";
+import { DetalleMantenimientoPage as DetalleMantenimiento } from "@/pages/DetalleMantenimiento";
 
 export const router = createBrowserRouter([
   // 1. Ruta Pública
@@ -45,6 +46,14 @@ export const router = createBrowserRouter([
           {
             path: "equipos",
             element: <Equipos />,
+          },
+          {
+            path: "equipos/:uuid",
+            element: <DetalleEquipoQr />,
+          },
+          {
+            path: "equipos/:uuid/mantenimientos/:id",
+            element: <DetalleMantenimiento />,
           },
           {
             path: "ubicaciones",

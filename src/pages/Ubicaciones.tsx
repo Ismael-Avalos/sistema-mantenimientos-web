@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Loader2, MapPin, Building2, Pencil, Trash2 } from "lucide-react";
 import { obtenerUbicaciones, eliminarUbicacion } from "../services/ubicaciones.service";
 import { ModalUbicacion } from "../components/ui/ModalUbicacion";
@@ -7,6 +8,7 @@ import type { Ubicacion } from "../types/Ubicacion";
 
 function Ubicaciones() {
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
+  const [searchParams] = useSearchParams();
   const [cargando, setCargando] = useState(true);
 
   // Estados para modales
@@ -31,6 +33,13 @@ function Ubicaciones() {
   useEffect(() => {
     cargar();
   }, []);
+
+  const consulta = searchParams.get("q")?.trim() ?? "";
+  const normalizarTexto = (texto: string) =>
+    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-SV");
+  const ubicacionesFiltradas = ubicaciones.filter((ubicacion) =>
+    normalizarTexto(ubicacion.nombre).includes(normalizarTexto(consulta))
+  );
 
   const handleNuevaUbicacion = () => {
     setUbicacionAEditar(null);
@@ -80,16 +89,16 @@ function Ubicaciones() {
           <div className="flex justify-center p-8 text-red-800">
             <Loader2 className="w-6 h-6 animate-spin" />
           </div>
-        ) : ubicaciones.length === 0 ? (
+        ) : ubicacionesFiltradas.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             <MapPin className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No hay ubicaciones registradas aún.</p>
+            <p className="text-sm">{consulta ? "No se encontraron ubicaciones con esa búsqueda." : "No hay ubicaciones registradas aún."}</p>
           </div>
         ) : (
           <>
             {/* VISTA MÓVIL (Tarjetas) */}
             <div className="block md:hidden divide-y divide-slate-100">
-              {ubicaciones.map((ubi) => (
+              {ubicacionesFiltradas.map((ubi) => (
                 <div key={ubi.id} className="p-4 space-y-3 hover:bg-slate-50/50">
                   <div className="flex justify-between items-start gap-2">
                     <div className="space-y-1">
@@ -142,7 +151,7 @@ function Ubicaciones() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {ubicaciones.map((ubi) => (
+                  {ubicacionesFiltradas.map((ubi) => (
                     <tr key={ubi.id} className="hover:bg-slate-50/50">
                       <td className="p-4 font-medium text-slate-800">
                         <div className="flex items-center gap-2">

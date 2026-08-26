@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Loader2, KeyRound, UserCheck, Users as UsersIcon } from "lucide-react";
 import { obtenerUsuarios } from "../services/usuarios.service";
 import { ModalCrearUsuario } from "../components/ui/ModalCrearUsuario";
@@ -6,6 +7,7 @@ import type { UserResponse } from "../types/Usuario";
 
 function Usuarios() {
   const [usuarios, setUsuarios] = useState<UserResponse[]>([]);
+  const [searchParams] = useSearchParams();
   const [cargando, setCargando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -24,6 +26,13 @@ function Usuarios() {
   useEffect(() => {
     cargar();
   }, []);
+
+  const consulta = searchParams.get("q")?.trim() ?? "";
+  const normalizarTexto = (texto: string) =>
+    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-SV");
+  const usuariosFiltrados = usuarios.filter((usuario) =>
+    normalizarTexto(usuario.nombre).includes(normalizarTexto(consulta))
+  );
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
@@ -51,16 +60,16 @@ function Usuarios() {
           <div className="flex justify-center p-12 text-red-800">
             <Loader2 className="w-8 h-8 animate-spin" />
           </div>
-        ) : usuarios.length === 0 ? (
+        ) : usuariosFiltrados.length === 0 ? (
           <div className="text-center p-8 sm:p-12 text-slate-400 space-y-2">
             <UsersIcon className="w-10 h-10 mx-auto text-slate-300" />
-            <p className="text-sm font-medium text-slate-600">No hay usuarios registrados</p>
+            <p className="text-sm font-medium text-slate-600">{consulta ? "No se encontraron usuarios con esa búsqueda." : "No hay usuarios registrados."}</p>
           </div>
         ) : (
           <>
             {/* Vista en Tarjetas para Móviles (< md) */}
             <div className="block md:hidden divide-y divide-slate-100">
-              {usuarios.map((usuario) => (
+              {usuariosFiltrados.map((usuario) => (
                 <div key={usuario.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start gap-2">
                     <div>
@@ -110,7 +119,7 @@ function Usuarios() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {usuarios.map((usuario) => (
+                  {usuariosFiltrados.map((usuario) => (
                     <tr key={usuario.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-4 font-medium text-slate-800">{usuario.nombre}</td>
                       <td className="p-4 text-slate-600">{usuario.correo}</td>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Loader2, FolderTree, FileText, Pencil, Trash2 } from "lucide-react";
 import { obtenerCategorias, eliminarCategoria } from "../services/categorias.service";
 import { ModalCategoria } from "../components/ui/ModalCategoria";
@@ -7,6 +8,7 @@ import type { Categoria } from "../types/Categoria";
 
 function Categorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [searchParams] = useSearchParams();
   const [cargando, setCargando] = useState(true);
 
   // Estados para modales
@@ -35,6 +37,13 @@ function Categorias() {
   useEffect(() => {
     cargar();
   }, []);
+
+  const consulta = searchParams.get("q")?.trim() ?? "";
+  const normalizarTexto = (texto: string) =>
+    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-SV");
+  const categoriasFiltradas = categorias.filter((categoria) =>
+    normalizarTexto(categoria.nombre).includes(normalizarTexto(consulta))
+  );
 
   const handleNuevaCategoria = () => {
     setCategoriaAEditar(null);
@@ -106,16 +115,16 @@ function Categorias() {
           <div className="flex justify-center p-8 text-red-800">
             <Loader2 className="w-6 h-6 animate-spin" />
           </div>
-        ) : categorias.length === 0 ? (
+        ) : categoriasFiltradas.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             <FolderTree className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No hay categorías registradas aún.</p>
+            <p className="text-sm">{consulta ? "No se encontraron categorías con esa búsqueda." : "No hay categorías registradas aún."}</p>
           </div>
         ) : (
           <div>
             {/* VISTA MÓVIL (Tarjetas) */}
             <div className="block md:hidden divide-y divide-slate-100">
-              {categorias.map((cat) => (
+              {categoriasFiltradas.map((cat) => (
                 <div key={cat.id} className="p-4 space-y-3 bg-white">
                   <div className="flex justify-between items-start gap-2">
                     <div className="space-y-1.5 flex-1 pr-2">
@@ -170,7 +179,7 @@ function Categorias() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {categorias.map((cat) => (
+                  {categoriasFiltradas.map((cat) => (
                     <tr key={cat.id} className="hover:bg-slate-50/50">
                       <td className="p-4 font-medium text-slate-800">
                         <div className="flex items-center gap-2">

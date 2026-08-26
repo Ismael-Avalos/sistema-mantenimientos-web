@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { 
   Laptop, 
   MapPin, 
@@ -10,52 +10,123 @@ import {
   Plus, 
   ArrowLeft,
   UserCheck,
-  FileText  
+  DollarSign,
+  Clock,
+  ChevronRight,
+  Barcode,
+  Hash
 } from "lucide-react";
 
-import { obtenerEquipoPorQrUuid } from "../services/equipos.service"; // Tu servicio existente de equipos
+import { obtenerEquipoPorQrUuid } from "../services/equipos.service";
 import { obtenerMantenimientosPorQrUuid } from "../services/mantenimiento.service";
+import { ModalCrearMantenimiento } from "../components/ui/ModalCrearMantenimiento";
+import type { Equipo } from "../types/Equipo";
 import type { MaintenanceResponse } from "../types/Maintenance";
 
 export function DetalleEquipoQr() {
   const { uuid } = useParams<{ uuid: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [equipo, setEquipo] = useState<any | null>(null);
+  const [equipo, setEquipo] = useState<Equipo | null>(null);
   const [historial, setHistorial] = useState<MaintenanceResponse[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const cargarDatos = useCallback(async () => {
+    if (!uuid) {
+      setCargando(false);
+      setError("Identificador UUID no proporcionado.");
+      return;
+    }
+
+    setCargando(true);
+    setError(null);
+
+    try {
+      const [datosEquipo, listaMantenimientos] = await Promise.all([
+        obtenerEquipoPorQrUuid(uuid),
+        obtenerMantenimientosPorQrUuid(uuid)
+      ]);
+
+      setEquipo(datosEquipo);
+      setHistorial(listaMantenimientos || []);
+    } catch (err: unknown) {
+      console.error("Error al obtener la información:", err);
+      setError("No se pudo cargar la información del equipo o no existe.");
+    } finally {
+      setCargando(false);
+    }
+  }, [uuid]);
 
   useEffect(() => {
-    const cargarDatos = async () => {
-      if (!uuid) return;
-      setCargando(true);
-      setError(null);
-
-      try {
-        // Ejecutamos ambas peticiones al backend de forma simultánea
-        const [datosEquipo, listaMantenimientos] = await Promise.all([
-          obtenerEquipoPorQrUuid(uuid),
-          obtenerMantenimientosPorQrUuid(uuid)
-        ]);
-
-        setEquipo(datosEquipo);
-        setHistorial(listaMantenimientos);
-      } catch (err: any) {
-        console.error("Error al obtener la información:", err);
-        setError("No se pudo cargar la información del equipo o no existe.");
-      } finally {
-        setCargando(false);
-      }
-    };
-
     cargarDatos();
-  }, [uuid]);
+  }, [cargarDatos]);
+
+  // Resumen operativo calculado dinámicamente desde el historial
+  const totalMantenimientos = historial.length;
+  const costoAcumulado = historial.reduce((acc, item) => acc + Number(item.costo || 0), 0);
+  
+  const ultimaAtencion = historial.length > 0
+    ? [...historial].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0].fecha
+    : null;
+
+  const formatearFecha = (fechaStr?: string | null) => {
+    if (!fechaStr) return "Sin registros";
+    const fecha = new Date(fechaStr);
+    if (isNaN(fecha.getTime())) return "Sin registros";
+    return fecha.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
+  const formatearMoneda = (monto: number) => {
+    return new Intl.NumberFormat("es-SV", {
+      style: "currency",
+      currency: "USD"
+    }).format(monto);
+  };
+
+  const obtenerBadgesEstado = (estado?: string) => {
+    const estadoNormalizado = estado?.toUpperCase() || "";
+    switch (estadoNormalizado) {
+      case "OPERATIVO":
+      case "ACTIVO":
+      case "BUENO":
+        return {
+          clases: "bg-emerald-50 text-emerald-700 border-emerald-200",
+          dot: "bg-emerald-500"
+        };
+      case "EN_MANTENIMIENTO":
+      case "REPARACION":
+      case "REVISION":
+        return {
+          clases: "bg-amber-50 text-amber-700 border-amber-200",
+          dot: "bg-amber-500"
+        };
+      case "INOPERATIVO":
+      case "BAJA":
+      case "DANADO":
+        return {
+          clases: "bg-rose-50 text-rose-700 border-rose-200",
+          dot: "bg-rose-500"
+        };
+      default:
+        return {
+          clases: "bg-slate-100 text-slate-700 border-slate-200",
+          dot: "bg-slate-400"
+        };
+    }
+  };
 
   if (cargando) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-4 border-red-800 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-10 h-10 border-4 border-red-700 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-sm font-medium text-slate-600">Cargando ficha del activo...</p>
         </div>
       </div>
@@ -64,153 +135,281 @@ export function DetalleEquipoQr() {
 
   if (error || !equipo) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-center">
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 max-w-sm w-full space-y-4">
+      <div className="min-h-[60vh] flex items-center justify-center p-4 text-center">
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 max-w-sm w-full space-y-4 shadow-sm">
           <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
           <h2 className="text-lg font-bold text-slate-800">Equipo no encontrado</h2>
-          <p className="text-xs text-slate-500">{error}</p>
+          <p className="text-xs text-slate-500">{error || "Sin registros"}</p>
+          <button
+            onClick={() => navigate({ pathname: "/equipos", search: location.search })}
+            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-xl font-medium transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver a equipos
+          </button>
         </div>
       </div>
     );
   }
 
+  const badgeInfo = obtenerBadgesEstado(equipo.estado);
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
-      {/* Encabezado */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 py-3 flex items-center justify-between">
-        <button 
-          onClick={() => window.history.back()}
-          className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg"
+    <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-6 text-slate-800">
+      {/* Botón de navegación explícita a la lista de equipos */}
+      <div className="flex items-center justify-between gap-4">
+        <button
+          onClick={() => navigate({ pathname: "/equipos", search: location.search })}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3.5 py-2 rounded-xl transition-all shadow-sm"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4" />
+          Volver a equipos
         </button>
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          Control de Activo
+
+        <span className="text-xs font-mono font-bold text-red-700 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg">
+          {equipo.codigoInventario || "Sin código"}
         </span>
-        <div className="w-5" />
       </div>
 
-      <div className="max-w-md mx-auto p-4 space-y-5">
+      {/* Grid Principal Adaptable */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Tarjeta del Activo */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="font-mono text-xs font-bold text-red-800 bg-red-50 px-2.5 py-1 rounded-md">
-                {equipo.codigoInventario || equipo.codigo}
+        {/* Columna Izquierda: Ficha Técnica Completa */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-6">
+          {/* Encabezado con Nombre y Badge dinámico basado en equipo.estado */}
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-100 pb-5">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                Ficha Técnica del Activo
               </span>
-              <h1 className="text-xl font-bold text-slate-800 mt-2">
-                {equipo.nombre}
+              <h1 className="text-2xl font-bold text-slate-900">
+                {equipo.nombre || "Sin nombre"}
               </h1>
+              <p className="text-xs text-slate-500 font-mono">
+                UUID: {equipo.qrUuid || "Sin registros"}
+              </p>
             </div>
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border rounded-md shrink-0 bg-emerald-50 text-emerald-700 border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              OPERATIVO
-            </span>
+
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold border rounded-full shrink-0 ${badgeInfo.clases}`}
+              >
+                <span className={`w-2 h-2 rounded-full ${badgeInfo.dot}`} />
+                {equipo.estado ? equipo.estado.replace(/_/g, " ") : "Sin estado"}
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-2 text-xs text-slate-600 border-t border-slate-100">
-            <div className="space-y-1">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Marca / Modelo</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                <Laptop className="w-3.5 h-3.5 text-slate-400" />
-                <span className="truncate">{equipo.marca} {equipo.modelo}</span>
+          {/* Ficha Técnica: Marca, Modelo, Serie, Categoría, Ubicación */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                Marca / Modelo
+              </span>
+              <div className="flex items-center gap-2 font-semibold text-slate-700">
+                <Laptop className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">
+                  {equipo.marca || equipo.modelo
+                    ? `${equipo.marca || ""} ${equipo.modelo || ""}`.trim()
+                    : "Sin datos"}
+                </span>
               </div>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Categoría</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                <Tag className="w-3.5 h-3.5 text-slate-400" />
+            <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                Nº de Serie
+              </span>
+              <div className="flex items-center gap-2 font-semibold text-slate-700 font-mono">
+                <Barcode className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">{equipo.serialEquipo || "Sin serie"}</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                Categoría
+              </span>
+              <div className="flex items-center gap-2 font-semibold text-slate-700">
+                <Tag className="w-4 h-4 text-slate-400 shrink-0" />
                 <span className="truncate">{equipo.categoria?.nombre || "Sin categoría"}</span>
               </div>
             </div>
 
-            <div className="space-y-1 col-span-2">
-              <span className="text-slate-400 block text-[10px] uppercase font-semibold">Ubicación</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                <MapPin className="w-3.5 h-3.5 text-red-800 shrink-0" />
-                <span>{equipo.ubicacion?.nombre || "Sonsonate"}</span>
+            <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 space-y-1">
+              <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">
+                Ubicación
+              </span>
+              <div className="flex items-center gap-2 font-semibold text-slate-700">
+                <MapPin className="w-4 h-4 text-red-700 shrink-0" />
+                <span className="truncate">{equipo.ubicacion?.nombre || "Sin ubicación"}</span>
               </div>
             </div>
           </div>
+
+          {/* Fecha de Adquisición */}
+          <div className="pt-2 border-t border-slate-100 text-xs">
+            <div className="flex items-center gap-2 text-slate-500">
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <span>Fecha de Adquisición:</span>
+              <strong className="text-slate-700 font-medium">
+                {formatearFecha(equipo.fechaAdquisicion)}
+              </strong>
+            </div>
+          </div>
         </div>
 
-        {/* Historial de Mantenimientos Reales */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Wrench className="w-4 h-4 text-slate-700" />
-              <h2 className="font-bold text-slate-800 text-sm">Historial de Mantenimientos</h2>
+        {/* Columna Derecha: Resumen Operativo Calculado */}
+        <div className="space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">
+            Resumen Operativo
+          </h2>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                Mantenimientos Realizados
+              </p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-0.5">
+                {totalMantenimientos}
+              </p>
             </div>
-            
-            <button
-              onClick={() => alert("Abrir formulario de nuevo mantenimiento")}
-              className="flex items-center gap-1 bg-red-800 hover:bg-red-900 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Nuevo
-            </button>
+            <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-red-700">
+              <Wrench className="w-5 h-5" />
+            </div>
           </div>
 
-          {historial.length === 0 ? (
-            <div className="bg-white p-6 rounded-2xl text-center border border-slate-100 text-slate-400 text-xs">
-              Este equipo no registra mantenimientos aún.
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                Costo Acumulado
+              </p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-0.5">
+                {formatearMoneda(costoAcumulado)}
+              </p>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {historial.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-2.5"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span 
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          item.tipo === "PREVENTIVO" 
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
-                        }`}
-                      >
-                        {item.tipo}
-                      </span>
-                      <span className="text-[11px] font-mono text-slate-400">
-                        #{String(item.numeroReporte).padStart(4, '0')}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-slate-400 text-xs">
-                      <Calendar className="w-3 h-3" />
-                      <span>{new Date(item.fecha).toISOString().split('T')[0]}</span>
-                    </div>
-                  </div>
-
-                  {/* Detalle del Trabajo */}
-                  <div className="text-xs text-slate-700 space-y-1">
-                    <p className="font-medium text-slate-800">{item.actividadesRealizadas}</p>
-                    {item.descripcionFalla && (
-                      <p className="text-slate-500 text-[11px]">Falla: {item.descripcionFalla}</p>
-                    )}
-                  </div>
-
-                  {/* Técnico y Costo */}
-                  <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                    <div className="flex items-center gap-1">
-                      <UserCheck className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{item.responsableNombre}</span>
-                    </div>
-                    <span className="font-mono font-semibold text-slate-800">
-                      ${Number(item.costo).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+              <DollarSign className="w-5 h-5" />
             </div>
-          )}
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                Última Atención
+              </p>
+              <p className="text-sm font-bold text-slate-900 mt-1">
+                {formatearFecha(ultimaAtencion)}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Historial de Mantenimientos en Tarjetas */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Wrench className="w-4 h-4 text-slate-700" />
+            <h2 className="font-bold text-slate-800 text-base">
+              Historial de Mantenimientos
+            </h2>
+          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-1.5 bg-red-700 hover:bg-red-800 text-white text-xs px-3.5 py-2 rounded-xl font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-700"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Registro
+          </button>
         </div>
 
+        {historial.length === 0 ? (
+          <div className="bg-white p-8 rounded-2xl text-center border border-slate-200 space-y-2">
+            <p className="text-sm font-semibold text-slate-700">Sin registros</p>
+            <p className="text-xs text-slate-400">
+              Este equipo no registra mantenimientos aún.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {historial.map((item) => (
+              <Link
+                key={item.id}
+                to={{ pathname: `/equipos/${uuid}/mantenimientos/${item.id}`, search: location.search }}
+                className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-red-200 hover:shadow-md transition-all space-y-3 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-red-700"
+              >
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md border ${
+                          item.tipo === "PREVENTIVO"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {item.tipo || "GENERAL"}
+                      </span>
+                      <span className="text-xs font-mono font-semibold text-slate-400 flex items-center gap-0.5">
+                        <Hash className="w-3 h-3" />
+                        {String(item.numeroReporte || 0).padStart(4, "0")}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-slate-400 text-xs font-medium">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{formatearFecha(item.fecha)}</span>
+                    </div>
+                  </div>
+
+                  {/* Descripción / Actividades */}
+                  <div className="text-xs text-slate-700 space-y-1">
+                    <p className="font-semibold text-slate-800 text-sm group-hover:text-red-700 transition-colors">
+                      {item.actividadesRealizadas || "Sin detalle de actividades"}
+                    </p>
+                    {item.descripcionFalla && (
+                      <p className="text-slate-500 text-xs">
+                        <strong className="font-semibold text-slate-600">Falla:</strong>{" "}
+                        {item.descripcionFalla}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Técnico, Costo y Chevron Clickeable */}
+                <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-xs mt-2">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                    <UserCheck className="w-4 h-4 text-slate-400" />
+                    <span className="truncate">{item.responsableNombre || "Sin responsable"}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-mono font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
+                      {formatearMoneda(Number(item.costo || 0))}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-red-700 group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Modal de Registro de Mantenimiento */}
+      {equipo && (
+        <ModalCrearMantenimiento
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          equipo={equipo}
+          onMantenimientoCreado={cargarDatos}
+        />
+      )}
     </div>
   );
 }

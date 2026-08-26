@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Plus, Loader2, Tag, MapPin, Laptop, Pencil, Trash2, QrCode, ChevronLeft, ChevronRight } from "lucide-react";
 import { obtenerEquipos, eliminarEquipo } from "../services/equipos.service";
 import { ModalCrearEquipo } from "../components/ui/ModalCrearEquipo";
 import { ModalConfirmar } from "../components/ui/ModalConfirmar";
-import { ModalQrEquipo } from "../components/ui/ModalQrEquipo"; // Modal QR
+import { ModalQrEquipo } from "../components/ui/ModalQrEquipo";
 import { getEstadoBadge } from "../utils/formatters";
 import type { Equipo } from "../types/Equipo";
 
 function Equipos() {
   const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [cargando, setCargando] = useState(true);
 
   // Estados de paginación local
@@ -40,8 +43,21 @@ function Equipos() {
     cargar();
   }, []);
 
-  // Calculos de paginación
-  const totalEquipos = equipos.length;
+  const consulta = searchParams.get("q")?.trim() ?? "";
+  const normalizarTexto = (texto: string) =>
+    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-SV");
+  const consultaNormalizada = normalizarTexto(consulta);
+  const equiposFiltrados = equipos.filter((equipo) =>
+    normalizarTexto(equipo.nombre).includes(consultaNormalizada) ||
+    normalizarTexto(equipo.codigoInventario).includes(consultaNormalizada)
+  );
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [consulta]);
+
+  // Cálculos de paginación sobre los resultados filtrados
+  const totalEquipos = equiposFiltrados.length;
   const totalPaginas = Math.ceil(totalEquipos / elementosPorPagina) || 1;
 
   // Ajuste automático si la eliminación deja vacía la página actual
@@ -53,7 +69,8 @@ function Equipos() {
 
   const indiceInicial = (paginaActual - 1) * elementosPorPagina;
   const indiceFinal = Math.min(indiceInicial + elementosPorPagina, totalEquipos);
-  const equiposPaginados = equipos.slice(indiceInicial, indiceFinal);
+  const equiposPaginados = equiposFiltrados.slice(indiceInicial, indiceFinal);
+  const enlaceDetalleEquipo = (uuid: string) => ({ pathname: `/equipos/${uuid}`, search: location.search });
 
   const handleNuevoEquipo = () => {
     setEquipoAEditar(null);
@@ -90,7 +107,7 @@ function Equipos() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Equipos</h1>
-          <p className="text-xs text-slate-500">Total registrados: {totalEquipos}</p>
+          <p className="text-xs text-slate-500">Total registrados: {equipos.length}</p>
         </div>
 
         <button
@@ -112,7 +129,7 @@ function Equipos() {
         ) : totalEquipos === 0 ? (
           <div className="p-8 sm:p-12 text-center text-slate-400">
             <Laptop className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No hay equipos registrados aún.</p>
+            <p className="text-sm">{consulta ? "No se encontraron equipos con esa búsqueda." : "No hay equipos registrados aún."}</p>
           </div>
         ) : (
           <>
@@ -125,10 +142,20 @@ function Equipos() {
                   <div key={equipo.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="font-mono text-xs font-semibold text-red-800 block">
+                        <Link
+                          to={enlaceDetalleEquipo(equipo.qrUuid)}
+                          className="font-mono text-xs font-semibold text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded px-0.5 inline-block"
+                        >
                           {equipo.codigoInventario}
-                        </span>
-                        <h2 className="font-bold text-slate-800 text-sm">{equipo.nombre}</h2>
+                        </Link>
+                        <h2 className="font-bold text-slate-800 text-sm">
+                          <Link
+                            to={enlaceDetalleEquipo(equipo.qrUuid)}
+                            className="hover:text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded px-0.5"
+                          >
+                            {equipo.nombre}
+                          </Link>
+                        </h2>
                       </div>
                       <span
                         className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium border rounded-md shrink-0 ${badge.badgeStyle}`}
@@ -233,11 +260,21 @@ function Equipos() {
                     return (
                       <tr key={equipo.id} className="hover:bg-slate-50/50">
                         <td className="p-4 font-mono font-medium text-red-800">
-                          {equipo.codigoInventario}
+                          <Link
+                            to={enlaceDetalleEquipo(equipo.qrUuid)}
+                            className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded px-1 py-0.5 inline-block"
+                          >
+                            {equipo.codigoInventario}
+                          </Link>
                         </td>
 
                         <td className="p-4 font-medium text-slate-800">
-                          {equipo.nombre}
+                          <Link
+                            to={enlaceDetalleEquipo(equipo.qrUuid)}
+                            className="hover:text-red-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded px-1 py-0.5 inline-block"
+                          >
+                            {equipo.nombre}
+                          </Link>
                         </td>
 
                         <td className="p-4">
