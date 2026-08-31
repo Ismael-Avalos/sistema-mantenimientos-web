@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Lock, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { cambiarContrasenaService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
+import { getSafeErrorMessage } from "@/services/problem-details";
 
 export const CambiarContrasena: React.FC = () => {
+  const [contrasenaActual, setContrasenaActual] = useState('');
   const [nuevaContrasena, setNuevaContrasena] = useState('');
   const [confirmarContrasena, setConfirmarContrasena] = useState('');
+  const [mostrarActual, setMostrarActual] = useState(false);
   const [mostrarNueva, setMostrarNueva] = useState(false);
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
-  const { user, updateUserPasswordState } = useAuth();
+  const { user, changePassword, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,8 +26,13 @@ export const CambiarContrasena: React.FC = () => {
       return;
     }
 
-    if (nuevaContrasena.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
+    if (nuevaContrasena.length < 12 || nuevaContrasena.length > 128) {
+      setError('La contraseña debe tener entre 12 y 128 caracteres.');
+      return;
+    }
+
+    if (!/[A-Z]/.test(nuevaContrasena) || !/[a-z]/.test(nuevaContrasena) || !/\d/.test(nuevaContrasena) || !/[^A-Za-z0-9]/.test(nuevaContrasena)) {
+      setError('Incluye al menos una mayúscula, una minúscula, un número y un símbolo.');
       return;
     }
 
@@ -37,15 +44,13 @@ export const CambiarContrasena: React.FC = () => {
     setCargando(true);
 
     try {
-      await cambiarContrasenaService({
-        usuarioId: user.id,
+      await changePassword({
+        contrasenaActual,
         nuevaContrasena,
       });
-
-      updateUserPasswordState(false);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al actualizar la contraseña.');
+      navigate('/login', { replace: true, state: { passwordChanged: true } });
+    } catch (err: unknown) {
+      setError(getSafeErrorMessage(err, 'Error al actualizar la contraseña.'));
     } finally {
       setCargando(false);
     }
@@ -83,6 +88,32 @@ export const CambiarContrasena: React.FC = () => {
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label htmlFor="contrasena-actual" className="block text-xs font-medium text-slate-700 mb-1">
+              Contraseña actual *
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                id="contrasena-actual"
+                type={mostrarActual ? "text" : "password"}
+                required
+                autoComplete="current-password"
+                value={contrasenaActual}
+                onChange={(event) => setContrasenaActual(event.target.value)}
+                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 text-slate-800 min-h-[44px]"
+              />
+              <button
+                type="button"
+                onClick={() => setMostrarActual(!mostrarActual)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center"
+                aria-label={mostrarActual ? "Ocultar contraseña actual" : "Mostrar contraseña actual"}
+              >
+                {mostrarActual ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
             <label htmlFor="nueva-contrasena" className="block text-xs font-medium text-slate-700 mb-1">
               Nueva Contraseña *
             </label>
@@ -92,9 +123,12 @@ export const CambiarContrasena: React.FC = () => {
                 id="nueva-contrasena"
                 type={mostrarNueva ? "text" : "password"}
                 required
+                minLength={12}
+                maxLength={128}
+                autoComplete="new-password"
                 value={nuevaContrasena}
                 onChange={(e) => setNuevaContrasena(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Entre 12 y 128 caracteres"
                 className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 text-slate-800 transition-all placeholder:text-slate-400 min-h-[44px]"
               />
               <button
@@ -118,6 +152,9 @@ export const CambiarContrasena: React.FC = () => {
                 id="confirmar-contrasena"
                 type={mostrarConfirmar ? "text" : "password"}
                 required
+                minLength={12}
+                maxLength={128}
+                autoComplete="new-password"
                 value={confirmarContrasena}
                 onChange={(e) => setConfirmarContrasena(e.target.value)}
                 placeholder="Repite la contraseña"
@@ -152,6 +189,14 @@ export const CambiarContrasena: React.FC = () => {
             )}
           </button>
         </form>
+
+        <button
+          type="button"
+          onClick={() => void logout().finally(() => navigate('/login', { replace: true }))}
+          className="w-full text-xs font-medium text-slate-500 hover:text-red-800 py-2"
+        >
+          Cerrar sesión
+        </button>
       </div>
     </div>
   );

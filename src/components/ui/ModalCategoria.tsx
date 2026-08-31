@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { crearCategoria, actualizarCategoria } from "../../services/categorias.service";
 import type { Categoria } from "../../types/Categoria";
+import { ErrorDialog } from "./ErrorDialog";
+import { normalizeApiError, type UiError } from "../../services/problem-details";
+import { runSingleSubmit } from "../../utils/single-submit";
 
 interface ModalCategoriaProps {
   isOpen: boolean;
@@ -19,9 +22,13 @@ export function ModalCategoria({
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [submitError, setSubmitError] = useState<UiError | null>(null);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (categoriaAEditar) {
+      // El formulario conserva su estado durante errores y solo se reinicializa al cambiar el registro.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNombre(categoriaAEditar.nombre);
       setDescripcion(categoriaAEditar.descripcion || "");
     } else {
@@ -33,38 +40,42 @@ export function ModalCategoria({
   // Cierre con la tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape" && isOpen && !submitError) {
         onClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, submitError]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setGuardando(true);
+  const closeSubmitError = () => {
+    const field = submitError?.field;
+    setSubmitError(null);
+    window.setTimeout(() => { if (field) document.getElementById(field)?.focus(); }, 0);
+  };
+
+  const saveCategoria = async () => {
     try {
-      if (categoriaAEditar) {
-        await actualizarCategoria(categoriaAEditar.id, { nombre, descripcion });
-      } else {
-        await crearCategoria({ nombre, descripcion });
-      }
-      onCategoriaGuardada();
-      onClose();
+      await runSingleSubmit(submittingRef, setGuardando, async () => {
+        setSubmitError(null);
+        if (categoriaAEditar) await actualizarCategoria(categoriaAEditar.id, { nombre, descripcion });
+        else await crearCategoria({ nombre, descripcion });
+        onCategoriaGuardada();
+        onClose();
+      });
     } catch (error) {
-      console.error("Error al guardar categoría:", error);
-    } finally {
-      setGuardando(false);
+      setSubmitError(normalizeApiError(error, { defaultField: "nombre-categoria" }));
     }
   };
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void saveCategoria(); };
 
   return (
     <div 
       className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      onClick={(event) => { if (event.currentTarget === event.target && !submitError) onClose(); }}
     >
       <div 
         className="bg-white rounded-2xl border border-slate-100 shadow-xl w-full max-w-md overflow-hidden"
@@ -98,10 +109,13 @@ export function ModalCategoria({
               type="text"
               required
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              onChange={(e) => { setNombre(e.target.value); if (submitError?.fieldErrors.nombre) setSubmitError((current) => current ? { ...current, fieldErrors: { ...current.fieldErrors, nombre: "" } } : null); }}
+              aria-invalid={Boolean(submitError?.fieldErrors.nombre || submitError?.field === "nombre-categoria")}
+              aria-describedby={submitError?.fieldErrors.nombre ? "nombre-categoria-error" : undefined}
               placeholder="Ej: Laptops, Redes, Herramientas..."
               className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 min-h-[44px]"
             />
+            {submitError?.fieldErrors.nombre && <p id="nombre-categoria-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.nombre}</p>}
           </div>
 
           <div>
@@ -138,6 +152,7 @@ export function ModalCategoria({
           </div>
         </form>
       </div>
+      <ErrorDialog error={submitError} onClose={closeSubmitError} onRetry={() => void saveCategoria()} />
     </div>
   );
 }

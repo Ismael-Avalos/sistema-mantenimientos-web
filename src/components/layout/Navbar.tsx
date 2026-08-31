@@ -1,4 +1,4 @@
-import { Bell, Menu, Search, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -101,16 +101,6 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         )}
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-3">
-        <button 
-          type="button"
-          aria-label="Notificaciones"
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="w-2 h-2 bg-red-700 rounded-full absolute top-3 right-3 ring-2 ring-white"></span>
-        </button>
-      </div>
     </header>
   );
 }

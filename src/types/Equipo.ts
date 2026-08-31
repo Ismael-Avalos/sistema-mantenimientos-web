@@ -6,7 +6,6 @@ export interface Equipo {
   qrUuid: string;
   codigoInventario: string;
   nombre: string;
-  tipo: string;
   marca: string;
   modelo: string;
   serialEquipo: string;

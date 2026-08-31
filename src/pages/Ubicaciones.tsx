@@ -5,8 +5,12 @@ import { obtenerUbicaciones, eliminarUbicacion } from "../services/ubicaciones.s
 import { ModalUbicacion } from "../components/ui/ModalUbicacion";
 import { ModalConfirmar } from "../components/ui/ModalConfirmar";
 import type { Ubicacion } from "../types/Ubicacion";
+import { useAuth } from "@/hooks/useAuth";
+import { hasRole } from "@/utils/roles";
 
 function Ubicaciones() {
+  const { user } = useAuth();
+  const esAdmin = hasRole(user?.rol, ["ADMIN"]);
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
   const [searchParams] = useSearchParams();
   const [cargando, setCargando] = useState(true);
@@ -74,13 +78,13 @@ function Ubicaciones() {
           <p className="text-xs text-slate-500">Total registradas: {ubicaciones.length}</p>
         </div>
 
-        <button
+        {esAdmin && <button
           onClick={handleNuevaUbicacion}
           className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Ubicación</span>
-        </button>
+        </button>}
       </div>
 
       {/* Contenedor Principal */}
@@ -117,7 +121,7 @@ function Ubicaciones() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                    {esAdmin && <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => handleEditar(ubi)}
                         className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
@@ -134,7 +138,7 @@ function Ubicaciones() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-                    </div>
+                    </div>}
                   </div>
                 </div>
               ))}
@@ -147,7 +151,7 @@ function Ubicaciones() {
                   <tr>
                     <th className="p-4">Nombre / Unidad</th>
                     <th className="p-4">Edificio</th>
-                    <th className="p-4 text-right">Acciones</th>
+                    {esAdmin && <th className="p-4 text-right">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -169,7 +173,7 @@ function Ubicaciones() {
                           <span className="text-slate-400 italic text-xs">Sin edificio asignado</span>
                         )}
                       </td>
-                      <td className="p-4">
+                      {esAdmin && <td className="p-4">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => handleEditar(ubi)}
@@ -188,7 +192,7 @@ function Ubicaciones() {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>
@@ -199,21 +203,21 @@ function Ubicaciones() {
       </div>
 
       {/* Modales */}
-      <ModalUbicacion
+      {esAdmin && <ModalUbicacion
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUbicacionGuardada={cargar}
         ubicacionAEditar={ubicacionAEditar}
-      />
+      />}
 
-      <ModalConfirmar
+      {esAdmin && <ModalConfirmar
         isOpen={!!ubicacionAEliminar}
         onClose={() => setUbicacionAEliminar(null)}
         onConfirm={handleConfirmarEliminar}
         titulo="Eliminar Ubicación"
         mensaje={`¿Estás seguro de que deseas eliminar la ubicación "${ubicacionAEliminar?.nombre}"?`}
         cargando={eliminando}
-      />
+      />}
     </div>
   );
 }

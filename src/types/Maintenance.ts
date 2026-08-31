@@ -37,3 +37,5 @@ export interface CrearMantenimientoDTO {
   fecha: string;
   fechaEntrega?: string | null;
 }
+
+export type ActualizarMantenimientoDTO = Omit<CrearMantenimientoDTO, 'equipoId' | 'sede'>;

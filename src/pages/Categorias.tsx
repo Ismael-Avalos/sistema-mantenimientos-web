@@ -5,8 +5,12 @@ import { obtenerCategorias, eliminarCategoria } from "../services/categorias.ser
 import { ModalCategoria } from "../components/ui/ModalCategoria";
 import { ModalConfirmar } from "../components/ui/ModalConfirmar";
 import type { Categoria } from "../types/Categoria";
+import { useAuth } from "@/hooks/useAuth";
+import { hasRole } from "@/utils/roles";
 
 function Categorias() {
+  const { user } = useAuth();
+  const esAdmin = hasRole(user?.rol, ["ADMIN"]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [searchParams] = useSearchParams();
   const [cargando, setCargando] = useState(true);
@@ -99,14 +103,14 @@ function Categorias() {
           <p className="text-xs text-slate-500">Total registradas: {categorias.length}</p>
         </div>
 
-        <button
+        {esAdmin && <button
           type="button"
           onClick={handleNuevaCategoria}
           className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 active:bg-red-950 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm min-h-[44px] cursor-pointer"
         >
           <Plus className="w-4 h-4 shrink-0" />
           <span>Agregar Categoría</span>
-        </button>
+        </button>}
       </div>
 
       {/* Contenedor Principal */}
@@ -143,7 +147,7 @@ function Categorias() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                    {esAdmin && <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleEditar(cat)}
@@ -162,7 +166,7 @@ function Categorias() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-                    </div>
+                    </div>}
                   </div>
                 </div>
               ))}
@@ -175,7 +179,7 @@ function Categorias() {
                   <tr>
                     <th className="p-4">Nombre</th>
                     <th className="p-4">Descripción</th>
-                    <th className="p-4 text-right">Acciones</th>
+                    {esAdmin && <th className="p-4 text-right">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -197,7 +201,7 @@ function Categorias() {
                           <span className="text-slate-400 italic text-xs">Sin descripción</span>
                         )}
                       </td>
-                      <td className="p-4">
+                      {esAdmin && <td className="p-4">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
@@ -216,7 +220,7 @@ function Categorias() {
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>
@@ -227,15 +231,15 @@ function Categorias() {
       </div>
 
       {/* Modal para Crear y Editar Categorías */}
-      <ModalCategoria
+      {esAdmin && <ModalCategoria
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCategoriaGuardada={cargar}
         categoriaAEditar={categoriaAEditar}
-      />
+      />}
 
       {/* Modal para Confirmar / Reasignar Eliminación */}
-      <ModalConfirmar
+      {esAdmin && <ModalConfirmar
         isOpen={!!categoriaAEliminar}
         onClose={cerrarModalEliminar}
         onConfirm={handleConfirmarEliminar}
@@ -273,7 +277,7 @@ function Categorias() {
             )}
           </div>
         )}
-      </ModalConfirmar>
+      </ModalConfirmar>}
     </div>
   );
 }

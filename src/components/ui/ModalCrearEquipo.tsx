@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Loader2 } from "lucide-react";
 import { 
   crearEquipo, 
@@ -10,6 +10,9 @@ import type { Categoria } from "../../types/Categoria";
 import type { Equipo } from "../../types/Equipo";
 import { obtenerUbicaciones } from "../../services/ubicaciones.service";
 import { obtenerCategorias } from "../../services/categorias.service";
+import { normalizeApiError, type UiError } from "../../services/problem-details";
+import { ErrorDialog } from "./ErrorDialog";
+import { runSingleSubmit } from "../../utils/single-submit";
 
 interface Props {
   isOpen: boolean;
@@ -21,7 +24,6 @@ interface Props {
 const estadoInicial: CrearEquipoDTO = {
   codigoInventario: "",
   nombre: "",
-  tipo: "",
   marca: "",
   modelo: "",
   serialEquipo: "",
@@ -42,17 +44,19 @@ export function ModalCrearEquipo({
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [cargandoRelaciones, setCargandoRelaciones] = useState(false);
+  const [submitError, setSubmitError] = useState<UiError | null>(null);
+  const submittingRef = useRef(false);
 
   // Cerrar con tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape" && isOpen && !submitError) {
         onClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, submitError]);
 
   // Carga de selects (Categorías y Ubicaciones)
   useEffect(() => {
@@ -80,10 +84,11 @@ export function ModalCrearEquipo({
   // Sincronizar campos del formulario (Crear vs Editar)
   useEffect(() => {
     if (equipoAEditar) {
+      // El formulario conserva su estado durante errores y solo se reinicializa al cambiar el registro.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         codigoInventario: equipoAEditar.codigoInventario || "",
         nombre: equipoAEditar.nombre || "",
-        tipo: equipoAEditar.tipo || "",
         marca: equipoAEditar.marca || "",
         modelo: equipoAEditar.modelo || "",
         serialEquipo: equipoAEditar.serialEquipo || "",
@@ -103,33 +108,41 @@ export function ModalCrearEquipo({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    if (submitError?.fieldErrors[e.target.name]) {
+      setSubmitError((current) => current ? { ...current, fieldErrors: { ...current.fieldErrors, [e.target.name]: "" } } : null);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setGuardando(true);
+  const closeSubmitError = () => {
+    const field = submitError?.field;
+    setSubmitError(null);
+    window.setTimeout(() => { if (field) document.getElementById(field)?.focus(); }, 0);
+  };
 
-    const payload: CrearEquipoDTO = {
-      ...formData,
-      ubicacionId: formData.ubicacionId ? formData.ubicacionId : null,
-      marca: formData.marca ? formData.marca : "",
-      modelo: formData.modelo ? formData.modelo : "",
-      serialEquipo: formData.serialEquipo ? formData.serialEquipo : "",
-    };
-
+  const saveEquipo = async () => {
     try {
-      if (equipoAEditar) {
-        await actualizarEquipo(equipoAEditar.id, payload);
-      } else {
-        await crearEquipo(payload);
-      }
-      onEquipoCreado();
-      onClose();
+      await runSingleSubmit(submittingRef, setGuardando, async () => {
+        setSubmitError(null);
+        const payload: CrearEquipoDTO = {
+          ...formData,
+          ubicacionId: formData.ubicacionId ? formData.ubicacionId : null,
+          marca: formData.marca ? formData.marca : "",
+          modelo: formData.modelo ? formData.modelo : "",
+          serialEquipo: formData.serialEquipo ? formData.serialEquipo : "",
+        };
+        if (equipoAEditar) await actualizarEquipo(equipoAEditar.id, payload);
+        else await crearEquipo(payload);
+        onEquipoCreado();
+        onClose();
+      });
     } catch (err) {
-      console.error("Error al procesar equipo:", err);
-    } finally {
-      setGuardando(false);
+      setSubmitError(normalizeApiError(err));
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void saveEquipo();
   };
 
   return (
@@ -171,8 +184,11 @@ export function ModalCrearEquipo({
                 required
                 value={formData.codigoInventario}
                 onChange={handleChange}
+                aria-invalid={Boolean(submitError?.fieldErrors.codigoInventario || submitError?.field === "codigoInventario")}
+                aria-describedby={submitError?.fieldErrors.codigoInventario ? "codigoInventario-error" : undefined}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
+              {submitError?.fieldErrors.codigoInventario && <p id="codigoInventario-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.codigoInventario}</p>}
             </div>
 
             <div>
@@ -185,21 +201,6 @@ export function ModalCrearEquipo({
                 name="nombre"
                 required
                 value={formData.nombre}
-                onChange={handleChange}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="tipo" className="block text-xs font-medium text-slate-600 mb-1">
-                Tipo *
-              </label>
-              <input
-                id="tipo"
-                type="text"
-                name="tipo"
-                required
-                value={formData.tipo}
                 onChange={handleChange}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
@@ -243,8 +244,11 @@ export function ModalCrearEquipo({
                 name="serialEquipo"
                 value={formData.serialEquipo}
                 onChange={handleChange}
+                aria-invalid={Boolean(submitError?.fieldErrors.serialEquipo || submitError?.field === "serialEquipo")}
+                aria-describedby={submitError?.fieldErrors.serialEquipo ? "serialEquipo-error" : undefined}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
               />
+              {submitError?.fieldErrors.serialEquipo && <p id="serialEquipo-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.serialEquipo}</p>}
             </div>
 
             <div>
@@ -359,6 +363,7 @@ export function ModalCrearEquipo({
         </form>
 
       </div>
+      <ErrorDialog error={submitError} onClose={closeSubmitError} onRetry={() => void saveEquipo()} />
     </div>
   );
 }

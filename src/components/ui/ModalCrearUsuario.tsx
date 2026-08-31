@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Loader2 } from "lucide-react";
 import { crearUsuario, type CreateUserDTO } from "../../services/usuarios.service";
 import { obtenerRoles } from "../../services/roles.service";
 import type { Rol } from "../../types/Rol";
+import { ErrorDialog } from "./ErrorDialog";
+import { normalizeApiError, type UiError } from "../../services/problem-details";
+import { runSingleSubmit } from "../../utils/single-submit";
 
 interface ModalCrearUsuarioProps {
   isOpen: boolean;
@@ -19,66 +22,65 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
   const [roles, setRoles] = useState<Rol[]>([]);
   const [cargandoRoles, setCargandoRoles] = useState(false);
   const [guardando, setGuardando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [contextualError, setContextualError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<UiError | null>(null);
+  const submittingRef = useRef(false);
 
   // Cerrar con la tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !guardando) {
+      if (e.key === "Escape" && isOpen && !guardando && !submitError) {
         onClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose, guardando]);
+  }, [isOpen, onClose, guardando, submitError]);
 
   // Carga de roles
   useEffect(() => {
     if (isOpen) {
-      setError(null);
+      // La apertura de una nueva sesión del modal reinicia únicamente sus mensajes transitorios.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setContextualError(null);
+      setSubmitError(null);
       setCargandoRoles(true);
       obtenerRoles()
         .then(setRoles)
-        .catch(() => setError("Error al cargar la lista de roles."))
+        .catch(() => setContextualError("Error al cargar la lista de roles."))
         .finally(() => setCargandoRoles(false));
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const closeSubmitError = () => {
+    const field = submitError?.field;
+    setSubmitError(null);
+    window.setTimeout(() => { if (field) document.getElementById(field)?.focus(); }, 0);
+  };
+
+  const saveUsuario = async () => {
     if (!rolId) {
-      setError("Debes seleccionar un rol.");
+      setContextualError("Debes seleccionar un rol.");
       return;
     }
-
-    setGuardando(true);
-    setError(null);
-
     try {
-      const payload: CreateUserDTO = {
-        nombre,
-        correo,
-        contrasena,
-        rolId
-      };
-      await crearUsuario(payload);
-      
-      // Limpiar formulario y notificar
-      setNombre("");
-      setCorreo("");
-      setContrasena("");
-      setRolId("");
-      onUsuarioCreado();
-      onClose();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Ocurrió un error al crear el usuario.";
-      setError(msg);
-    } finally {
-      setGuardando(false);
+      await runSingleSubmit(submittingRef, setGuardando, async () => {
+        setContextualError(null);
+        setSubmitError(null);
+        const payload: CreateUserDTO = { nombre, correo, contrasena, rolId };
+        await crearUsuario(payload);
+        setNombre(""); setCorreo(""); setContrasena(""); setRolId("");
+        onUsuarioCreado();
+        onClose();
+      });
+    } catch (err) {
+      setSubmitError(normalizeApiError(err, { defaultField: "correo" }));
     }
   };
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void saveUsuario(); };
 
   return (
     <div 
@@ -106,9 +108,9 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
 
         {/* Formulario Scrolleable */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
-          {error && (
-            <div className="p-3 text-xs bg-red-50 text-red-700 rounded-xl border border-red-100 font-medium">
-              {error}
+          {contextualError && (
+            <div role="alert" className="p-3 text-xs bg-red-50 text-red-700 rounded-xl border border-red-100 font-medium">
+              {contextualError}
             </div>
           )}
 
@@ -136,10 +138,13 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
               type="email"
               required
               value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
+              onChange={(e) => { setCorreo(e.target.value); if (submitError?.fieldErrors.correo) setSubmitError((current) => current ? { ...current, fieldErrors: { ...current.fieldErrors, correo: "" } } : null); }}
+              aria-invalid={Boolean(submitError?.fieldErrors.correo || submitError?.field === "correo")}
+              aria-describedby={submitError?.fieldErrors.correo ? "correo-error" : undefined}
               placeholder="correo@ejemplo.com"
               className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20"
             />
+            {submitError?.fieldErrors.correo && <p id="correo-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.correo}</p>}
           </div>
 
           <div>
@@ -207,6 +212,7 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
         </form>
 
       </div>
+      <ErrorDialog error={submitError} onClose={closeSubmitError} onRetry={() => void saveUsuario()} />
     </div>
   );
 }

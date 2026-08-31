@@ -4,13 +4,13 @@ import {
   FolderTree, 
   MapPin, 
   Users, 
-  LayoutDashboard, 
-  Settings, 
+  LayoutDashboard,
   LogOut,
   UserLock,
   X
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
+import { hasRole } from "@/utils/roles";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -18,7 +18,7 @@ interface SidebarProps {
 }
 
 // 1. Helper blindado para obtener el primer nombre y primer apellido (ej: René Pinto)
-const obtenerNombreCorto = (nombreCompleto?: any): string => {
+const obtenerNombreCorto = (nombreCompleto?: string): string => {
   if (!nombreCompleto || typeof nombreCompleto !== "string") return "Usuario";
   const partes = nombreCompleto.trim().split(/\s+/);
   
@@ -30,15 +30,11 @@ const obtenerNombreCorto = (nombreCompleto?: any): string => {
 };
 
 // 2. Helper blindado para obtener la etiqueta del panel según el Rol (String u Objeto)
-const obtenerEtiquetaPanel = (rol?: any): string => {
+const obtenerEtiquetaPanel = (rol?: string): string => {
   if (!rol) return "PANEL CONTROL";
 
   // Si 'rol' viene como objeto (ej: { id: 1, nombre: "ADMIN" }), extraemos el texto de forma segura
-  const rolTexto = typeof rol === "string" 
-    ? rol 
-    : (rol?.nombre || rol?.name || String(rol));
-
-  const rolUpper = String(rolTexto).toUpperCase();
+  const rolUpper = rol.toUpperCase();
 
   if (rolUpper.includes("ADMIN")) return "PANEL ADMIN";
   if (rolUpper.includes("TECNICO") || rolUpper.includes("TÉCNICO")) return "PANEL TÉCNICO";
@@ -58,8 +54,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login", { replace: true });
   };
 
@@ -146,24 +142,15 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                   <span>Ubicaciones</span>
                 </NavLink>
 
-                <NavLink to="/usuarios" className={linkClasses} onClick={onClose}>
-                  <Users className="w-4 h-4 flex-shrink-0" />
-                  <span>Usuarios</span>
-                </NavLink>
+                {hasRole(user?.rol, ["ADMIN"]) && (
+                  <NavLink to="/usuarios" className={linkClasses} onClick={onClose}>
+                    <Users className="w-4 h-4 flex-shrink-0" />
+                    <span>Usuarios</span>
+                  </NavLink>
+                )}
               </nav>
             </div>
 
-            <div>
-              <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                Configuración
-              </p>
-              <nav className="space-y-1">
-                <NavLink to="/configuracion" className={linkClasses} onClick={onClose}>
-                  <Settings className="w-4 h-4 flex-shrink-0" />
-                  <span>Ajustes</span>
-                </NavLink>
-              </nav>
-            </div>
           </div>
         </div>
 
@@ -191,7 +178,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               type="button"
               title="Cerrar sesión"
               aria-label="Cerrar sesión" 
-              onClick={handleLogout}
+              onClick={() => void handleLogout()}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-red-700 hover:bg-rose-50 rounded-lg transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
             >
               <LogOut className="w-4 h-4" />

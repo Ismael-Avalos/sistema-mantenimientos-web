@@ -7,8 +7,12 @@ import { ModalConfirmar } from "../components/ui/ModalConfirmar";
 import { ModalQrEquipo } from "../components/ui/ModalQrEquipo";
 import { getEstadoBadge } from "../utils/formatters";
 import type { Equipo } from "../types/Equipo";
+import { useAuth } from "@/hooks/useAuth";
+import { hasRole } from "@/utils/roles";
 
 function Equipos() {
+  const { user } = useAuth();
+  const esAdmin = hasRole(user?.rol, ["ADMIN"]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -110,14 +114,14 @@ function Equipos() {
           <p className="text-xs text-slate-500">Total registrados: {equipos.length}</p>
         </div>
 
-        <button
+        {esAdmin && <button
           type="button"
           onClick={handleNuevoEquipo}
           className="flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
         >
           <Plus className="w-4 h-4" />
           <span>Agregar Equipo</span>
-        </button>
+        </button>}
       </div>
 
       {/* Contenedor Principal (Tarjetas en móvil / Tabla en Desktop) */}
@@ -215,23 +219,23 @@ function Equipos() {
                         <QrCode className="w-4 h-4" />
                       </button>
 
-                      <button
+                      {esAdmin && <button
                         type="button"
                         onClick={() => handleEditar(equipo)}
                         aria-label={`Editar equipo ${equipo.nombre}`}
                         className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
                       >
                         <Pencil className="w-4 h-4" />
-                      </button>
+                      </button>}
 
-                      <button
+                      {esAdmin && <button
                         type="button"
                         onClick={() => setEquipoAEliminar(equipo)}
                         aria-label={`Eliminar equipo ${equipo.nombre}`}
                         className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </button>}
                     </div>
                   </div>
                 );
@@ -336,7 +340,7 @@ function Equipos() {
                               <QrCode className="w-4 h-4" />
                             </button>
 
-                            <button
+                            {esAdmin && <button
                               type="button"
                               onClick={() => handleEditar(equipo)}
                               aria-label={`Editar equipo ${equipo.nombre}`}
@@ -344,9 +348,9 @@ function Equipos() {
                               className="min-w-[36px] min-h-[36px] flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
                             >
                               <Pencil className="w-4 h-4" />
-                            </button>
+                            </button>}
 
-                            <button
+                            {esAdmin && <button
                               type="button"
                               onClick={() => setEquipoAEliminar(equipo)}
                               aria-label={`Eliminar equipo ${equipo.nombre}`}
@@ -354,7 +358,7 @@ function Equipos() {
                               className="min-w-[36px] min-h-[36px] flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
+                            </button>}
                           </div>
                         </td>
                       </tr>
@@ -419,22 +423,22 @@ function Equipos() {
       </div>
 
       {/* Modal Crear / Editar */}
-      <ModalCrearEquipo
+      {esAdmin && <ModalCrearEquipo
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onEquipoCreado={cargar}
         equipoAEditar={equipoAEditar}
-      />
+      />}
 
       {/* Modal Confirmar Eliminación */}
-      <ModalConfirmar
+      {esAdmin && <ModalConfirmar
         isOpen={!!equipoAEliminar}
         onClose={() => setEquipoAEliminar(null)}
         onConfirm={handleConfirmarEliminar}
         titulo="Eliminar Equipo"
         mensaje={`¿Estás seguro de que deseas eliminar el equipo "${equipoAEliminar?.nombre}" (${equipoAEliminar?.codigoInventario})?`}
         cargando={eliminando}
-      />
+      />}
 
       {/* Modal Ver / Descargar QR */}
       <ModalQrEquipo

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Wrench, Lock, Mail, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { loginService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/useAuth";
+import { getSafeErrorMessage } from "@/services/problem-details";
 
 export const Login: React.FC = () => {
   const [correo, setCorreo] = useState('');
@@ -11,13 +11,29 @@ export const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isAuthenticated, isInitializing, sessionMessage, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Obtiene la ruta de origen a la que intentaba acceder el usuario (p. ej. /mantenimiento/qr/xyz)
   // Si no venía de ninguna ruta en particular, redirige a /equipos por defecto
-  const destino = location.state?.from?.pathname || '/equipos';
+  const rutaOrigen = location.state?.from;
+  const destino = rutaOrigen
+    ? `${rutaOrigen.pathname}${rutaOrigen.search || ""}${rutaOrigen.hash || ""}`
+    : "/equipos";
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center" role="status">
+        <Loader2 className="w-8 h-8 animate-spin text-red-800" />
+        <span className="sr-only">Restaurando sesión...</span>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to={user?.debeCambiarContrasena ? "/cambiar-contrasena" : destino} replace />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +42,7 @@ export const Login: React.FC = () => {
 
     try {
       // Endpoint a consumir en Spring Boot
-      const { token, usuario } = await loginService({ correo, contrasena });
-
-      login(token, usuario);
+      const usuario = await login({ correo, contrasena });
 
       if (usuario.debeCambiarContrasena) {
         navigate('/cambiar-contrasena', { replace: true });
@@ -36,8 +50,8 @@ export const Login: React.FC = () => {
         // Redirige al destino previo guardado (la vista del QR) o al listado principal
         navigate(destino, { replace: true });
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Credenciales inválidas. Verifica tu correo y contraseña.');
+    } catch (err: unknown) {
+      setError(getSafeErrorMessage(err, 'Credenciales inválidas. Verifica tu correo y contraseña.'));
     } finally {
       setCargando(false);
     }
@@ -61,6 +75,25 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Mensaje de Error */}
+        {sessionMessage && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 bg-amber-50 border border-amber-100 text-amber-800 text-xs p-3.5 rounded-xl"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{sessionMessage}</span>
+          </div>
+        )}
+
+        {location.state?.passwordChanged && (
+          <div
+            role="status"
+            className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs p-3.5 rounded-xl"
+          >
+            <span>Contraseña actualizada. Inicia sesión nuevamente.</span>
+          </div>
+        )}
+
         {error && (
           <div 
             role="alert" 
@@ -84,6 +117,7 @@ export const Login: React.FC = () => {
                 id="login-correo"
                 type="email"
                 required
+                autoComplete="username"
                 value={correo}
                 onChange={(e) => setCorreo(e.target.value)}
                 placeholder="usuario@uma.edu.sv"
@@ -102,6 +136,7 @@ export const Login: React.FC = () => {
                 id="login-contrasena"
                 type={mostrarContrasena ? "text" : "password"}
                 required
+                autoComplete="current-password"
                 value={contrasena}
                 onChange={(e) => setContrasena(e.target.value)}
                 placeholder="••••••••"

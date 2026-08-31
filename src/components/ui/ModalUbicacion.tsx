@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Loader2, MapPin } from "lucide-react";
 import { 
   crearUbicacion, 
@@ -6,6 +6,9 @@ import {
   type CrearUbicacionDTO 
 } from "../../services/ubicaciones.service";
 import type { Ubicacion } from "../../types/Ubicacion";
+import { ErrorDialog } from "./ErrorDialog";
+import { normalizeApiError, type UiError } from "../../services/problem-details";
+import { runSingleSubmit } from "../../utils/single-submit";
 
 interface ModalUbicacionProps {
   isOpen: boolean;
@@ -27,23 +30,26 @@ export function ModalUbicacion({
   });
 
   const [guardando, setGuardando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<UiError | null>(null);
+  const submittingRef = useRef(false);
 
   // Cerrar con la tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !guardando) {
+      if (e.key === "Escape" && isOpen && !guardando && !submitError) {
         onClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose, guardando]);
+  }, [isOpen, onClose, guardando, submitError]);
 
   // Sincronizar datos del formulario
   useEffect(() => {
     if (isOpen) {
-      setError(null);
+      // El formulario conserva su estado durante errores y solo se reinicializa al abrir/cambiar registro.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSubmitError(null);
       if (ubicacionAEditar) {
         setFormData({
           nombre: ubicacionAEditar.nombre,
@@ -59,29 +65,30 @@ export function ModalUbicacion({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    if (submitError?.fieldErrors[e.target.name]) setSubmitError((current) => current ? { ...current, fieldErrors: { ...current.fieldErrors, [e.target.name]: "" } } : null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setGuardando(true);
-    setError(null);
-    
+  const closeSubmitError = () => {
+    const field = submitError?.field;
+    setSubmitError(null);
+    window.setTimeout(() => { if (field) document.getElementById(field)?.focus(); }, 0);
+  };
+
+  const saveUbicacion = async () => {
     try {
-      if (ubicacionAEditar) {
-        await actualizarUbicacion(ubicacionAEditar.id, formData);
-      } else {
-        await crearUbicacion(formData);
-      }
-      
-      onUbicacionGuardada();
-      onClose();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Error al procesar la ubicación.";
-      setError(msg);
-    } finally {
-      setGuardando(false);
+      await runSingleSubmit(submittingRef, setGuardando, async () => {
+        setSubmitError(null);
+        if (ubicacionAEditar) await actualizarUbicacion(ubicacionAEditar.id, formData);
+        else await crearUbicacion(formData);
+        onUbicacionGuardada();
+        onClose();
+      });
+    } catch (err) {
+      setSubmitError(normalizeApiError(err, { defaultField: "nombre" }));
     }
   };
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void saveUbicacion(); };
 
   return (
     <div 
@@ -112,12 +119,6 @@ export function ModalUbicacion({
 
         {/* Formulario Scrolleable */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
-          {error && (
-            <div className="p-3 text-xs bg-red-50 text-red-700 rounded-xl border border-red-100 font-medium">
-              {error}
-            </div>
-          )}
-
           <div>
             <label htmlFor="nombre" className="block text-xs font-semibold text-slate-600 uppercase mb-1">
               Nombre / Unidad *
@@ -130,8 +131,11 @@ export function ModalUbicacion({
               placeholder="Ej. CC1/Bienestar Estudiantil"
               value={formData.nombre}
               onChange={handleChange}
+              aria-invalid={Boolean(submitError?.fieldErrors.nombre || submitError?.field === "nombre")}
+              aria-describedby={submitError?.fieldErrors.nombre ? "nombre-ubicacion-error" : undefined}
               className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20"
             />
+            {submitError?.fieldErrors.nombre && <p id="nombre-ubicacion-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.nombre}</p>}
           </div>
 
           <div>
@@ -176,6 +180,7 @@ export function ModalUbicacion({
         </form>
 
       </div>
+      <ErrorDialog error={submitError} onClose={closeSubmitError} onRetry={() => void saveUbicacion()} />
     </div>
   );
 }

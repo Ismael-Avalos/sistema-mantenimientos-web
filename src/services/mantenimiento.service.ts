@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { MaintenanceResponse, CrearMantenimientoDTO } from '../types/Maintenance';
+import type { MaintenanceResponse, CrearMantenimientoDTO, ActualizarMantenimientoDTO } from '../types/Maintenance';
 
 // Obtener el historial filtrando por el UUID del QR del equipo
 export const obtenerMantenimientosPorQrUuid = async (qrUuid: string): Promise<MaintenanceResponse[]> => {
@@ -23,4 +23,16 @@ export const obtenerMantenimientoPorId = async (id: string): Promise<Maintenance
 export const crearMantenimiento = async (datos: CrearMantenimientoDTO): Promise<MaintenanceResponse> => {
   const { data } = await api.post<MaintenanceResponse>('/api/mantenimientos', datos);
   return data;
+};
+
+export const actualizarMantenimiento = async (
+  id: string,
+  datos: ActualizarMantenimientoDTO,
+): Promise<MaintenanceResponse> => {
+  const { data } = await api.put<MaintenanceResponse>(`/api/mantenimientos/${id}`, datos);
+  return data;
+};
+
+export const eliminarMantenimiento = async (id: string): Promise<void> => {
+  await api.delete(`/api/mantenimientos/${id}`);
 };

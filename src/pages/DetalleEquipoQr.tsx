@@ -14,12 +14,20 @@ import {
   Clock,
   ChevronRight,
   Barcode,
-  Hash
+  Hash,
+  Pencil,
+  Trash2,
+  CheckCircle2
 } from "lucide-react";
 
 import { obtenerEquipoPorQrUuid } from "../services/equipos.service";
-import { obtenerMantenimientosPorQrUuid } from "../services/mantenimiento.service";
+import { eliminarMantenimiento, obtenerMantenimientosPorQrUuid } from "../services/mantenimiento.service";
+import { getSafeErrorMessage } from "../services/problem-details";
 import { ModalCrearMantenimiento } from "../components/ui/ModalCrearMantenimiento";
+import { ModalEditarMantenimiento } from "../components/ui/ModalEditarMantenimiento";
+import { ModalConfirmar } from "../components/ui/ModalConfirmar";
+import { useAuth } from "../hooks/useAuth";
+import { hasRole } from "../utils/roles";
 import type { Equipo } from "../types/Equipo";
 import type { MaintenanceResponse } from "../types/Maintenance";
 
@@ -27,12 +35,39 @@ export function DetalleEquipoQr() {
   const { uuid } = useParams<{ uuid: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const [equipo, setEquipo] = useState<Equipo | null>(null);
   const [historial, setHistorial] = useState<MaintenanceResponse[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editando, setEditando] = useState<MaintenanceResponse | null>(null);
+  const [eliminando, setEliminando] = useState<MaintenanceResponse | null>(null);
+  const [procesandoEliminacion, setProcesandoEliminacion] = useState(false);
+  const [notificacion, setNotificacion] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
+
+  const puedeEditar = hasRole(user?.rol, ['ADMIN', 'TECNICO']);
+  const puedeEliminar = hasRole(user?.rol, ['ADMIN']);
+
+  useEffect(() => {
+    if (!notificacion) return;
+    const timeout = window.setTimeout(() => setNotificacion(null), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [notificacion]);
+
+  const confirmarEliminacion = async () => {
+    if (!eliminando || !puedeEliminar) return;
+    try {
+      setProcesandoEliminacion(true);
+      await eliminarMantenimiento(eliminando.id);
+      setHistorial((actual) => actual.filter((item) => item.id !== eliminando.id));
+      setEliminando(null);
+      setNotificacion({ tipo: 'ok', texto: 'Mantenimiento eliminado correctamente.' });
+    } catch (err) {
+      setNotificacion({ tipo: 'error', texto: getSafeErrorMessage(err, 'No se pudo eliminar el mantenimiento.') });
+    } finally { setProcesandoEliminacion(false); }
+  };
 
   const cargarDatos = useCallback(async () => {
     if (!uuid) {
@@ -156,6 +191,7 @@ export function DetalleEquipoQr() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-6 text-slate-800">
+      {notificacion && <div role="status" className={`fixed right-4 top-4 z-[60] flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg ${notificacion.tipo === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`}><CheckCircle2 className="h-4 w-4 shrink-0" />{notificacion.texto}</div>}
       {/* Botón de navegación explícita a la lista de equipos */}
       <div className="flex items-center justify-between gap-4">
         <button
@@ -338,12 +374,11 @@ export function DetalleEquipoQr() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {historial.map((item) => (
-              <Link
+              <article
                 key={item.id}
-                to={{ pathname: `/equipos/${uuid}/mantenimientos/${item.id}`, search: location.search }}
-                className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-red-200 hover:shadow-md transition-all space-y-3 flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-red-700"
+                className="group flex flex-col justify-between space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-red-200 hover:shadow-md sm:p-5"
               >
-                <div className="space-y-3">
+                <Link to={{ pathname: `/equipos/${uuid}/mantenimientos/${item.id}`, search: location.search }} className="space-y-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span
@@ -379,23 +414,25 @@ export function DetalleEquipoQr() {
                       </p>
                     )}
                   </div>
-                </div>
+                </Link>
 
                 {/* Técnico, Costo y Chevron Clickeable */}
-                <div className="flex justify-between items-center pt-3 border-t border-slate-100 text-xs mt-2">
+                <div className="flex flex-col gap-3 border-t border-slate-100 pt-3 text-xs sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-1.5 text-slate-600 font-medium">
                     <UserCheck className="w-4 h-4 text-slate-400" />
                     <span className="truncate">{item.responsableNombre || "Sin responsable"}</span>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     <span className="font-mono font-bold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100">
                       {formatearMoneda(Number(item.costo || 0))}
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-red-700 group-hover:translate-x-0.5 transition-all" />
+                    {puedeEditar && <button type="button" onClick={() => setEditando(item)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 font-semibold text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700"><Pencil className="h-3.5 w-3.5" />Editar</button>}
+                    {puedeEliminar && <button type="button" onClick={() => setEliminando(item)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 font-semibold text-red-700 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" />Eliminar</button>}
                   </div>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         )}
@@ -410,6 +447,8 @@ export function DetalleEquipoQr() {
           onMantenimientoCreado={cargarDatos}
         />
       )}
+      {editando && <ModalEditarMantenimiento isOpen mantenimiento={editando} onClose={() => setEditando(null)} onActualizado={(actualizado) => { setHistorial((lista) => lista.map((item) => item.id === actualizado.id ? actualizado : item)); setNotificacion({ tipo: 'ok', texto: 'Mantenimiento actualizado correctamente.' }); }} />}
+      <ModalConfirmar isOpen={Boolean(eliminando)} onClose={() => !procesandoEliminacion && setEliminando(null)} onConfirm={confirmarEliminacion} cargando={procesandoEliminacion} titulo="Eliminar mantenimiento" mensaje={eliminando ? `¿Desea eliminar permanentemente el mantenimiento #${eliminando.numeroReporte}? Esta acción también eliminará sus archivos adjuntos.` : ''} textoConfirmar="Eliminar permanentemente" />
     </div>
   );
 }

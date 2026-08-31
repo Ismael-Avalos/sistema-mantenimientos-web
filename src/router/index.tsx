@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/router/ProtectedRoute";
+import { RoleRoute } from "@/router/RoleRoute";
 
 // Páginas
 import { Login } from "@/pages/Login";
@@ -60,8 +61,13 @@ export const router = createBrowserRouter([
             element: <Ubicaciones />,
           },
           {
-            path: "usuarios",
-            element: <Usuarios />,
+            element: <RoleRoute allowedRoles={["ADMIN"]} />,
+            children: [
+              {
+                path: "usuarios",
+                element: <Usuarios />,
+              },
+            ],
           },
           {
             path: "categorias",
