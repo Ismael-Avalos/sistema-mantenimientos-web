@@ -20,7 +20,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import type { MaintenanceResponse } from '../types/Maintenance';
-import { obtenerMantenimientoPorId } from '../services/mantenimiento.service';
+import { obtenerMantenimientoPorId, obtenerMantenimientosPorQrUuid } from '../services/mantenimiento.service';
+import { obtenerEquipoPorQrUuid } from '../services/equipos.service';
+import { BotonesReporte } from '../components/ui/BotonesReporte';
 
 export const DetalleMantenimientoPage: React.FC = () => {
   const { uuid, id } = useParams<{ uuid: string; id: string }>();
@@ -148,7 +150,7 @@ export const DetalleMantenimientoPage: React.FC = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Navegación superior */}
-        <div>
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <button
             type="button"
             onClick={handleVolver}
@@ -157,6 +159,16 @@ export const DetalleMantenimientoPage: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             Volver al equipo
           </button>
+          <BotonesReporte obtenerDatos={async () => {
+            if (!uuid) throw new Error('Equipo no identificado');
+            const [equipo, historial] = await Promise.all([
+              obtenerEquipoPorQrUuid(uuid), obtenerMantenimientosPorQrUuid(uuid),
+            ]);
+            // Validate the relationship before placing equipment data on the report.
+            const registro = historial.find(item => item.id === mantenimiento.id);
+            if (!registro) throw new Error('El mantenimiento no pertenece al equipo');
+            return { equipo, mantenimientos: [registro], individual: true };
+          }} />
         </div>
 
         {/* Encabezado principal */}

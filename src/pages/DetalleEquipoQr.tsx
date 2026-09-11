@@ -30,6 +30,7 @@ import { useAuth } from "../hooks/useAuth";
 import { hasRole } from "../utils/roles";
 import type { Equipo } from "../types/Equipo";
 import type { MaintenanceResponse } from "../types/Maintenance";
+import { BotonesReporte } from '../components/ui/BotonesReporte';
 
 export function DetalleEquipoQr() {
   const { uuid } = useParams<{ uuid: string }>();
@@ -193,7 +194,7 @@ export function DetalleEquipoQr() {
     <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-6 text-slate-800">
       {notificacion && <div role="status" className={`fixed right-4 top-4 z-[60] flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg ${notificacion.tipo === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`}><CheckCircle2 className="h-4 w-4 shrink-0" />{notificacion.texto}</div>}
       {/* Botón de navegación explícita a la lista de equipos */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <button
           onClick={() => navigate({ pathname: "/equipos", search: location.search })}
           className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3.5 py-2 rounded-xl transition-all shadow-sm"
@@ -202,9 +203,7 @@ export function DetalleEquipoQr() {
           Volver a equipos
         </button>
 
-        <span className="text-xs font-mono font-bold text-red-700 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg">
-          {equipo.codigoInventario || "Sin código"}
-        </span>
+        <BotonesReporte obtenerDatos={() => ({ equipo, mantenimientos: historial })} />
       </div>
 
       {/* Grid Principal Adaptable */}
@@ -222,7 +221,7 @@ export function DetalleEquipoQr() {
                 {equipo.nombre || "Sin nombre"}
               </h1>
               <p className="text-xs text-slate-500 font-mono">
-                UUID: {equipo.qrUuid || "Sin registros"}
+                Código de equipo: {equipo.codigoInventario || "Sin código"}
               </p>
             </div>
 
