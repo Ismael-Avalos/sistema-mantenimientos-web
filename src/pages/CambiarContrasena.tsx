@@ -26,13 +26,13 @@ export const CambiarContrasena: React.FC = () => {
       return;
     }
 
-    if (nuevaContrasena.length < 12 || nuevaContrasena.length > 128) {
-      setError('La contraseña debe tener entre 12 y 128 caracteres.');
+    if (nuevaContrasena.length < 8 || nuevaContrasena.length > 128) {
+      setError('La contraseña debe tener entre 8 y 128 caracteres.');
       return;
     }
 
-    if (!/[A-Z]/.test(nuevaContrasena) || !/[a-z]/.test(nuevaContrasena) || !/\d/.test(nuevaContrasena) || !/[^A-Za-z0-9]/.test(nuevaContrasena)) {
-      setError('Incluye al menos una mayúscula, una minúscula, un número y un símbolo.');
+    if (!/[a-zA-Z]/.test(nuevaContrasena) || !/\d/.test(nuevaContrasena)) {
+      setError('Incluye al menos una letra y un número.');
       return;
     }
 
@@ -123,12 +123,13 @@ export const CambiarContrasena: React.FC = () => {
                 id="nueva-contrasena"
                 type={mostrarNueva ? "text" : "password"}
                 required
-                minLength={12}
+                minLength={8}
                 maxLength={128}
                 autoComplete="new-password"
                 value={nuevaContrasena}
                 onChange={(e) => setNuevaContrasena(e.target.value)}
-                placeholder="Entre 12 y 128 caracteres"
+                placeholder="Entre 8 y 128 caracteres"
+                aria-describedby="nueva-contrasena-ayuda"
                 className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 text-slate-800 transition-all placeholder:text-slate-400 min-h-[44px]"
               />
               <button
@@ -140,6 +141,9 @@ export const CambiarContrasena: React.FC = () => {
                 {mostrarNueva ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <p id="nueva-contrasena-ayuda" className="mt-1 text-xs text-slate-500">
+              Incluye al menos una letra y un número. No se requieren mayúsculas ni símbolos.
+            </p>
           </div>
 
           <div>
@@ -152,7 +156,7 @@ export const CambiarContrasena: React.FC = () => {
                 id="confirmar-contrasena"
                 type={mostrarConfirmar ? "text" : "password"}
                 required
-                minLength={12}
+                minLength={8}
                 maxLength={128}
                 autoComplete="new-password"
                 value={confirmarContrasena}

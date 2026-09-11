@@ -61,6 +61,10 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
   };
 
   const saveUsuario = async () => {
+    if (contrasena.length < 8 || contrasena.length > 128 || !contrasena.trim()) {
+      setContextualError("La contraseña temporal debe tener entre 8 y 128 caracteres y no puede contener solo espacios.");
+      return;
+    }
     if (!rolId) {
       setContextualError("Debes seleccionar un rol.");
       return;
@@ -155,11 +159,18 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
               id="contrasena"
               type="password"
               required
+              minLength={8}
+              maxLength={128}
+              autoComplete="new-password"
+              aria-describedby="contrasena-temporal-ayuda"
               value={contrasena}
               onChange={(e) => setContrasena(e.target.value)}
               placeholder="••••••••"
               className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20"
             />
+            <p id="contrasena-temporal-ayuda" className="mt-1 text-xs text-slate-500">
+              Entre 8 y 128 caracteres. Puede contener solo números, letras o símbolos.
+            </p>
           </div>
 
           <div>
