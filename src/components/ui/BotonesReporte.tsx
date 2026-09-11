@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { FileDown, Sheet, Loader2 } from 'lucide-react';
 import type { DatosReporte } from '../../utils/reportes';
+import { useAuth } from '../../hooks/useAuth';
 
 export function BotonesReporte({ obtenerDatos }: { obtenerDatos: () => DatosReporte | Promise<DatosReporte> }) {
+  const { user } = useAuth();
   const [exportando, setExportando] = useState<'pdf' | 'xlsx' | null>(null);
   const [error, setError] = useState('');
   async function exportar(formato: 'pdf' | 'xlsx') {
@@ -11,7 +13,7 @@ export function BotonesReporte({ obtenerDatos }: { obtenerDatos: () => DatosRepo
     setError('');
     try {
       const { exportarReporte } = await import('../../utils/reportes');
-      await exportarReporte(await obtenerDatos(), formato);
+      await exportarReporte({ ...await obtenerDatos(), emitidoPor: user?.nombre }, formato);
     } catch {
       setError('No se pudo generar el reporte. Intenta nuevamente.');
     } finally {

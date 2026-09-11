@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+/// <reference types="node" />
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { crearExcel, crearPdf, fechaReporte, nombreReporte, ordenarHistorial } from './reportes';
 import type { DatosReporte } from './reportes';
 
@@ -15,6 +17,11 @@ const datos: DatosReporte = {
 };
 
 describe('reportes de mantenimiento', () => {
+  beforeEach(() => {
+    const logo = readFileSync('public/android-chrome-512x512.png');
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(logo)));
+  });
+  afterEach(() => vi.unstubAllGlobals());
   it('preserva fechas de calendario y ordena sin mutar el historial', () => {
     expect(fechaReporte('2024-01-01')?.getDate()).toBe(1);
     expect(fechaReporte('inválida')).toBeNull();
@@ -54,5 +61,32 @@ describe('reportes de mantenimiento', () => {
     const vacio = { ...datos, mantenimientos: [] };
     expect((await crearExcel(vacio)).getWorksheet('Resumen')!.getCell('B13').value).toBe(0);
     expect((await crearPdf(vacio)).output()).toContain('Este equipo no registra mantenimientos.');
+  });
+
+  it('incluye el logo institucional y las dos firmas del mantenimiento individual en una página', async () => {
+    const doc = await crearPdf({ ...datos, individual: true, emitidoPor: 'Usuario que exporta' });
+    const contenido = doc.output();
+    expect(doc.getNumberOfPages()).toBe(1);
+    expect(contenido).toContain('/Subtype /Image');
+    expect(contenido).toContain('UNIVERSIDAD MODULAR ABIERTA');
+    expect(contenido).toContain('Regional Sonsonate');
+    expect(contenido).toContain('(Solicitante del mantenimiento)');
+    expect(contenido).toContain('(María López)');
+    expect(contenido).toContain('(René Pinto Ávalos)');
+    expect(contenido).not.toContain('Usuario que exporta');
+  });
+
+  it('firma el histórico con el usuario que exporta y mantiene las firmas después de textos largos', async () => {
+    const doc = await crearPdf({ ...datos, emitidoPor: 'Ana Emisora', mantenimientos: [{ ...datos.mantenimientos[0], recomendaciones: 'Texto largo. '.repeat(500) }] });
+    const contenido = doc.output();
+    expect(contenido).toContain('(Ana Emisora)');
+    expect(contenido).toContain('(Emitido por)');
+    expect(contenido).not.toContain('(Solicitante del mantenimiento)');
+    expect(contenido.lastIndexOf('(Ana Emisora)')).toBeGreaterThan(contenido.lastIndexOf('Texto largo.'));
+  });
+
+  it('avisa si no es posible cargar el logo para evitar un reporte institucional incompleto', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 404 })));
+    await expect(crearPdf(datos)).rejects.toThrow('No se pudo cargar el logo institucional');
   });
 });

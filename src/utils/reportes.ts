@@ -5,10 +5,10 @@ export interface DatosReporte {
   equipo: Equipo;
   mantenimientos: MaintenanceResponse[];
   individual?: boolean;
+  emitidoPor?: string;
 }
 
 const texto = (valor?: string | null) => valor?.trim() || 'No registrado';
-const dinero = (valor: number) => new Intl.NumberFormat('es-SV', { style: 'currency', currency: 'USD' }).format(valor);
 
 // Preserve calendar dates and backend LocalDateTime values without timezone shifts.
 export function fechaReporte(valor?: string | null): Date | null {
@@ -42,76 +42,11 @@ function ficha(equipo: Equipo): [string, string][] {
 }
 
 export async function crearPdf(datos: DatosReporte) {
-  const { jsPDF } = await import('jspdf');
-  const doc = new jsPDF({ format: 'a4' });
-  const items = ordenarHistorial(datos.mantenimientos);
-  const titulo = datos.individual ? 'Reporte de mantenimiento' : 'Historial de mantenimientos';
-  doc.setProperties({ title: titulo, subject: datos.equipo.codigoInventario, author: 'Sistema de Mantenimientos' });
-  let y = 42;
-  const encabezado = () => {
-    doc.setFillColor(153, 27, 27);
-    doc.rect(0, 0, 210, 3, 'F');
-    doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(153, 27, 27);
-    doc.text('SISTEMA DE MANTENIMIENTOS', 18, 16);
-    doc.setFontSize(19).setTextColor(15, 23, 42);
-    doc.text(titulo, 18, 27);
-    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(100, 116, 139);
-    doc.text(`Emitido: ${new Date().toLocaleString('es-SV')}`, 18, 34);
-  };
-  encabezado();
-  const espacio = (alto: number) => {
-    if (y + alto > 276) { doc.addPage(); encabezado(); y = 44; }
-  };
-  const parrafo = (contenido: string, negrita = false) => {
-    doc.setFont('helvetica', negrita ? 'bold' : 'normal').setFontSize(10).setTextColor(30, 41, 59);
-    const lineas: string[] = doc.splitTextToSize(contenido, 174);
-    for (const linea of lineas) {
-      espacio(5);
-      // A page break redraws the header and changes the font.
-      doc.setFont('helvetica', negrita ? 'bold' : 'normal').setFontSize(10).setTextColor(30, 41, 59);
-      doc.text(linea, 18, y);
-      y += 5;
-    }
-    y += 2;
-  };
-  const seccion = (tituloSeccion: string) => {
-    espacio(20);
-    y += 3;
-    doc.setDrawColor(226, 232, 240).line(18, y, 192, y);
-    y += 8;
-    parrafo(tituloSeccion, true);
-  };
-  seccion('Ficha del equipo');
-  ficha(datos.equipo).forEach(([clave, valor]) => parrafo(`${clave}: ${valor}`));
-  seccion('Resumen del reporte');
-  parrafo(`Intervenciones: ${items.length}    |    Costo total: ${dinero(items.reduce((sum, m) => sum + Number(m.costo || 0), 0))}`, true);
-  if (items.length) parrafo(`Período: ${fechaTexto(items.at(-1)?.fecha)} al ${fechaTexto(items[0].fecha)}`);
-  else parrafo('Este equipo no registra mantenimientos.');
-  parrafo('La ficha refleja los datos actuales del equipo. Las intervenciones se presentan de la más reciente a la más antigua.');
-  for (const m of items) {
-    seccion(`Reporte #${m.numeroReporte} - ${m.tipo}`);
-    parrafo(`Inicio: ${fechaTexto(m.fecha)}    |    Entrega: ${fechaTexto(m.fechaEntrega)}`);
-    parrafo(`Sede: ${texto(m.sede)}    |    Unidad: ${texto(m.unidad)}`);
-    parrafo(`Responsable: ${texto(m.responsableNombre)}    |    Costo: ${dinero(Number(m.costo || 0))}`);
-    parrafo(`Solicitante: ${texto(m.solicitanteNombre)}`);
-    for (const [etiqueta, valor] of [
-      ['Falla / motivo', m.descripcionFalla], ['Actividades realizadas', m.actividadesRealizadas],
-      ['Observaciones técnicas', m.observacionesTecnicas], ['Recomendaciones', m.recomendaciones],
-    ]) {
-      espacio(16);
-      parrafo(`${etiqueta}:`, true);
-      parrafo(texto(valor));
-    }
-  }
-  const paginas = doc.getNumberOfPages();
-  for (let pagina = 1; pagina <= paginas; pagina++) {
-    doc.setPage(pagina);
-    doc.setDrawColor(226, 232, 240).line(18, 282, 192, 282);
-    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(100, 116, 139);
-    doc.text('Sistema de Mantenimientos Institucional', 18, 288);
-    doc.text(`Página ${pagina} de ${paginas}`, 192, 288, { align: 'right' });
-  }
-  return doc;
+  const { dibujarPdf } = await import('./reportes-pdf');
+  // Same institutional emblem as the favicon, in its existing print-friendly resolution.
+  const respuesta = await fetch(`${import.meta.env.BASE_URL}android-chrome-512x512.png`);
+  if (!respuesta.ok) throw new Error('No se pudo cargar el logo institucional');
+  return dibujarPdf(datos, new Uint8Array(await respuesta.arrayBuffer()));
 }
 
 export async function crearExcel(datos: DatosReporte) {
