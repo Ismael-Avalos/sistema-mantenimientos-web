@@ -73,3 +73,7 @@ export default defineConfig([
 ])
 
 ```
+
+## Despliegue
+
+Consulta [la guía de Vercel y Render](DEPLOYMENT.md) para configurar las variables de entorno y la autenticación.
