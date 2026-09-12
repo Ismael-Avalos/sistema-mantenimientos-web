@@ -7,6 +7,7 @@ import { RoleRoute } from "@/router/RoleRoute";
 import { Login } from "@/pages/Login";
 import { CambiarContrasena } from "@/pages/CambiarContrasena";
 import Equipos from "@/pages/Equipos";
+import Dashboard from "@/pages/Dashboard";
 import Ubicaciones from "@/pages/Ubicaciones";
 import Usuarios from "@/pages/Usuarios";
 import Categorias from "@/pages/Categorias";
@@ -42,7 +43,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <Equipos />,
+            element: <Dashboard />,
           },
           {
             path: "equipos",

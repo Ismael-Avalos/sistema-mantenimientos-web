@@ -32,7 +32,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
     return null;
   }, [location]);
 
-  const esListado = contexto !== null && (location.pathname === contexto.rutaListado || (contexto.rutaListado === "/equipos" && location.pathname === "/"));
+  const esListado = contexto !== null && location.pathname === contexto.rutaListado;
 
   useEffect(() => {
     setValorBusqueda(searchParams.get("q") ?? "");
