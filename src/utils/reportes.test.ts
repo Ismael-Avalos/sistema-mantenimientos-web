@@ -57,6 +57,17 @@ describe('reportes de mantenimiento', () => {
     expect(contenido).toContain('PROY-001');
   });
 
+  it('resume el historial con falla y actividades sin anexar intervenciones individuales', async () => {
+    const doc = await crearPdf(datos);
+    const contenido = doc.output();
+    expect(doc.getNumberOfPages()).toBe(1);
+    expect(contenido).toContain('Cristal del cañón roto.');
+    expect(contenido).toContain('Cambio de cristal. Limpieza interna.');
+    expect(contenido).not.toContain('Se verificó el funcionamiento del equipo.');
+    expect(contenido).not.toContain('Realizar limpieza periódica.');
+    expect(contenido).not.toContain('INTERVENCIÓN');
+  });
+
   it('permite exportar equipos sin mantenimientos', async () => {
     const vacio = { ...datos, mantenimientos: [] };
     expect((await crearExcel(vacio)).getWorksheet('Resumen')!.getCell('B13').value).toBe(0);
@@ -77,7 +88,7 @@ describe('reportes de mantenimiento', () => {
   });
 
   it('firma el histórico con el usuario que exporta y mantiene las firmas después de textos largos', async () => {
-    const doc = await crearPdf({ ...datos, emitidoPor: 'Ana Emisora', mantenimientos: [{ ...datos.mantenimientos[0], recomendaciones: 'Texto largo. '.repeat(500) }] });
+    const doc = await crearPdf({ ...datos, emitidoPor: 'Ana Emisora', mantenimientos: [{ ...datos.mantenimientos[0], actividadesRealizadas: 'Texto largo. '.repeat(500) }] });
     const contenido = doc.output();
     expect(contenido).toContain('(Ana Emisora)');
     expect(contenido).toContain('(Emitido por)');

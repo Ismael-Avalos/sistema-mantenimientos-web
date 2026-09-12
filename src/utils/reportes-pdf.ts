@@ -154,8 +154,18 @@ export function dibujarPdf(datos: DatosReporte, logo: Uint8Array) {
     seccion(contexto, 30);
     cabeceraTabla();
     for (const m of items) {
+      contexto = `Relación de intervenciones · Reporte #${m.numeroReporte}`;
+      const resumen = [m.descripcionFalla, m.actividadesRealizadas].map(valor =>
+        texto(valor).split(/\r?\n/).map(parte => parte.trim()).filter(Boolean).flatMap(parte =>
+          lineas(parte.replace(/^(?:[-*•]|\d+[.)])\s+/, ''), ancho / 2 - 12, 8)
+            .map((contenido, i) => ({ contenido, inicio: i === 0 }))));
       const pendientes = [`#${m.numeroReporte}`, fecha(m.fecha), m.tipo, texto(m.responsableNombre), moneda(m.costo)]
         .map((valor, i) => lineas(valor, anchos[i] - 6, 8));
+      const altoFila = 6 + Math.max(...pendientes.map(p => p.length)) * 4;
+      const altoResumen = 10 + Math.max(...resumen.map(p => p.length)) * 4;
+      // Keep ordinary records together; oversized records continue with their report number.
+      const reserva = altoFila + altoResumen <= limite - 69 ? altoFila + altoResumen : Math.min(altoFila, 25) + 14;
+      if (y + reserva > limite) { nuevaPagina(); cabeceraTabla(); }
       do {
         const restantes = Math.max(...pendientes.map(p => p.length));
         if (y + Math.min(6 + restantes * 4, 25) > limite) { nuevaPagina(); cabeceraTabla(); }
@@ -171,6 +181,28 @@ export function dibujarPdf(datos: DatosReporte, logo: Uint8Array) {
         doc.setDrawColor(BORDE).setLineWidth(0.2).line(margen, y, 195, y);
         if (pendientes.some(p => p.length)) { nuevaPagina(); cabeceraTabla(); }
       } while (pendientes.some(p => p.length));
+      let continuacion = false;
+      do {
+        if (y + 14 > limite) { nuevaPagina(); cabeceraTabla(); }
+        const tomar = Math.min(Math.max(...resumen.map(p => p.length)), Math.floor((limite - y - 10) / 4));
+        const alto = 10 + tomar * 4;
+        resumen.forEach((partes, i) => {
+          const x = margen + i * ancho / 2;
+          doc.setDrawColor(BORDE).setLineWidth(0.2).rect(x, y, ancho / 2, alto);
+          doc.setFillColor(FONDO).rect(x + 0.1, y + 0.1, ancho / 2 - 0.2, 6, 'F');
+          fuente(7, true, ROJO);
+          doc.text(`${i === 0 ? 'FALLA / MOTIVO DE ATENCIÓN' : 'ACTIVIDADES REALIZADAS'}${continuacion ? ' (CONT.)' : ''}`, x + 3, y + 4.2);
+          fuente(8);
+          partes.splice(0, tomar).forEach(({ contenido, inicio }, n) => {
+            if (inicio) doc.text('•', x + 3, y + 10 + n * 4);
+            doc.text(contenido, x + 7, y + 10 + n * 4);
+          });
+        });
+        y += alto;
+        continuacion = true;
+        if (resumen.some(p => p.length)) { nuevaPagina(); cabeceraTabla(); }
+      } while (resumen.some(p => p.length));
+      y += 3;
     }
   }
   function firmas(personas: Campo[]) {
@@ -211,18 +243,10 @@ export function dibujarPdf(datos: DatosReporte, logo: Uint8Array) {
     campos([['Desde', items.length ? fecha(items.at(-1)?.fecha) : 'Sin registros'], ['Hasta', items.length ? fecha(items[0].fecha) : 'Sin registros']]);
     y += 5;
     if (!items.length) nota('Este equipo no registra mantenimientos.');
-    else {
-      tablaHistorial();
-      // Each intervention starts on a new page, keeping the history easy to file and read.
-      contexto = '';
-      nuevaPagina();
-    }
+    else tablaHistorial();
   }
-  items.forEach((m, i) => {
-    if (i > 0) { contexto = ''; nuevaPagina(); }
-    intervencion(m);
-  });
   if (datos.individual) {
+    intervencion(items[0]);
     firmas([['Técnico responsable', items[0].responsableNombre], ['Solicitante del mantenimiento', items[0].solicitanteNombre]]);
   } else {
     firmas([['Emitido por', datos.emitidoPor || 'Nombre no registrado']]);
