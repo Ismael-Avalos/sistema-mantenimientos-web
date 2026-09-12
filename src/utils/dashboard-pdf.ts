@@ -15,7 +15,7 @@ export function dibujarPdfDashboard(r: ResumenDashboard, emitidoPor: string, log
   let y = 55;
   const limite = 270;
   const emision = new Date().toLocaleString('es-SV');
-  doc.setProperties({ title: `Dashboard - ${r.periodo}`, author: 'Universidad Modular Abierta', subject: r.filtro.ubicacion || 'Todas las ubicaciones' });
+  doc.setProperties({ title: `Dashboard - ${r.periodo}`, author: 'Universidad Modular Abierta', subject: r.filtro.edificio || 'Todos los edificios' });
   function fuente(size = 9, bold = false, color = '#1E293B') { doc.setFont('helvetica', bold ? 'bold' : 'normal').setFontSize(size).setTextColor(color); }
   function cabecera() {
     doc.addImage(logo, 'PNG', 16, 12, 25, 25, 'uma', 'FAST');
@@ -60,9 +60,9 @@ export function dibujarPdfDashboard(r: ResumenDashboard, emitidoPor: string, log
   }
   cabecera();
   parrafo(`Emisión: ${emision}`);
-  parrafo(`Ubicación: ${r.filtro.ubicacion || 'Todas las ubicaciones'}`, true);
+  parrafo(`Edificio: ${r.filtro.edificio || 'Todos los edificios'}`, true);
   parrafo(`Período seleccionado: ${r.periodo}${r.filtro.ciclo ? (r.filtro.ciclo === 1 ? ' (enero a junio)' : ' (julio a diciembre)') : ''}`, true);
-  parrafo('Inventario y ubicación actuales del equipo. Costos en USD agrupados por fecha de inicio del mantenimiento.');
+  parrafo('Inventario y edificio actuales del equipo. Costos en USD agrupados por fecha de inicio del mantenimiento.');
   seccion('Indicadores generales');
   tabla(['Indicador', 'Resultado', 'Alcance'], [
     ['Total de equipos', String(r.equipos), 'Inventario actual'],
@@ -70,7 +70,7 @@ export function dibujarPdfDashboard(r: ResumenDashboard, emitidoPor: string, log
     ['Mantenimientos registrados', String(r.cantidad), r.periodo],
     ['Costo del período', dinero(r.costo), r.periodo],
     ['Promedio por mantenimiento', dinero(r.promedio), r.periodo],
-    ['Costo histórico acumulado', dinero(r.historico), 'Todos los años de la ubicación seleccionada'],
+    ['Costo histórico acumulado', dinero(r.historico), 'Todos los años del edificio seleccionado'],
   ], [72, 38, 70]);
   if (r.sinFecha) parrafo(`${r.sinFecha} mantenimiento(s) sin fecha válida incluidos en el histórico, excluidos de años, ciclos y gráfica.`);
   seccion('Costos por ciclo y año');
@@ -78,13 +78,10 @@ export function dibujarPdfDashboard(r: ResumenDashboard, emitidoPor: string, log
   tabla(['Año', 'Ciclo 01 (ene-jun)', 'Ciclo 02 (jul-dic)', 'Total anual'], r.resumenAnios.map(a => [String(a.anio), `${dinero(a.ciclo1)}\n01-${a.anio}`, `${dinero(a.ciclo2)}\n02-${a.anio}`, dinero(a.total)]), [24, 54, 54, 48]);
   seccion(`Actividad de mantenimiento - ${r.periodo}`);
   tabla([r.filtro.anio === 'todos' ? 'Año' : 'Mes', 'Mantenimientos', 'Costo (USD)'], r.serie.map(p => [p.etiqueta, String(p.cantidad), dinero(p.costo)]), [60, 60, 60]);
-  seccion('Equipos por categoría y ubicación');
+  seccion('Equipos por categoría');
   parrafo('Inventario actual, con todos los estados. No se filtra por año ni ciclo.');
   if (!r.equipos) parrafo('No hay equipos registrados en esta selección.');
-  r.ubicacionesInventario.forEach((ubicacion, i) => {
-    espacio(25); parrafo(`Ubicación: ${ubicacion} - Total: ${r.totalesUbicacion[i]} equipos`, true);
-    tabla(['Categoría', 'Equipos'], [...r.inventario.map(c => [c.categoria, String(c.cantidades[i])]), ['TOTAL', String(r.totalesUbicacion[i])]], [140, 40]);
-  });
+  tabla(['Categoría', 'Total de equipos'], [...r.inventario.map(c => [c.categoria, String(c.total)]), ['TOTAL', String(r.equipos)]], [140, 40]);
   espacio(20); parrafo(`Emitido por: ${emitidoPor}`, true);
   const paginas = doc.getNumberOfPages();
   for (let p = 1; p <= paginas; p++) {

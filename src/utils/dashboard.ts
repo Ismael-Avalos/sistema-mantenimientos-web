@@ -1,15 +1,17 @@
 import type { Equipo } from '../types/Equipo';
+import type { Ubicacion } from '../types/Ubicacion';
 import type { Categoria } from '../types/Categoria';
 import type { MaintenanceResponse } from '../types/Maintenance';
 
 export interface DatosDashboard {
   equipos: Equipo[];
   categorias: Categoria[];
+  ubicaciones: Ubicacion[];
   mantenimientos: (MaintenanceResponse & { equipoId: string })[];
 }
-export interface FiltroDashboard { anio: number | 'todos'; ciclo: 0 | 1 | 2; ubicacion: string }
+export interface FiltroDashboard { anio: number | 'todos'; ciclo: 0 | 1 | 2; edificio: string }
 export const dineroDashboard = (valor: number) => new Intl.NumberFormat('es-SV', { style: 'currency', currency: 'USD' }).format(valor);
-export const ubicacionEquipo = (equipo: Equipo) => equipo.ubicacion?.nombre?.trim() || 'Sin ubicación';
+export const edificioEquipo = (equipo: Equipo) => equipo.ubicacion?.edificio?.trim() || 'Sin edificio';
 const centavos = (m: MaintenanceResponse) => Math.round(Number(m.costo || 0) * 100);
 export function periodoMantenimiento(fecha: string) {
   const partes = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/.exec(fecha);
@@ -22,7 +24,7 @@ export function etiquetaPeriodo(f: FiltroDashboard) {
   return f.anio === 'todos' ? 'Todo el historial' : f.ciclo ? `Ciclo 0${f.ciclo}-${f.anio}` : `Año ${f.anio}`;
 }
 export function calcularDashboard(datos: DatosDashboard, filtro: FiltroDashboard) {
-  const equipos = datos.equipos.filter(e => !filtro.ubicacion || ubicacionEquipo(e) === filtro.ubicacion);
+  const equipos = datos.equipos.filter(e => !filtro.edificio || edificioEquipo(e) === filtro.edificio);
   const equiposSeleccionados = new Set(equipos.map(e => e.id));
   const historial = datos.mantenimientos.filter(m => equiposSeleccionados.has(m.equipoId));
   const fechados = historial.map(m => ({ m, periodo: periodoMantenimiento(m.fecha) }));
@@ -32,11 +34,10 @@ export function calcularDashboard(datos: DatosDashboard, filtro: FiltroDashboard
   const anios = [...new Set([new Date().getFullYear(), ...datos.mantenimientos.flatMap(m => {
     const p = periodoMantenimiento(m.fecha); return p ? [p.anio] : [];
   })])].sort((a, b) => b - a);
-  const ubicaciones = [...new Set(datos.equipos.map(ubicacionEquipo))].sort();
-  const ubicacionesInventario = [...new Set(equipos.map(ubicacionEquipo))].sort();
+  const edificios = [...new Set([...datos.ubicaciones.flatMap(u => u.edificio?.trim() ? [u.edificio.trim()] : []), ...datos.equipos.map(edificioEquipo)])].sort();
   const categorias = [...new Set([...datos.categorias.map(c => c.nombre), ...equipos.map(e => e.categoria?.nombre || 'Sin categoría')])].sort();
-  const inventario = categorias.map(categoria => ({ categoria, cantidades: ubicacionesInventario.map(ubicacion =>
-    equipos.filter(e => ubicacionEquipo(e) === ubicacion && (e.categoria?.nombre || 'Sin categoría') === categoria).length) }));
+  const inventario = categorias.map(categoria => ({ categoria, total:
+    equipos.filter(e => (e.categoria?.nombre || 'Sin categoría') === categoria).length }));
   const estados = [
     { nombre: 'Activos', cantidad: equipos.filter(e => e.estado === 'ACTIVO').length, color: '#991B1B' },
     { nombre: 'En mantenimiento', cantidad: equipos.filter(e => e.estado === 'EN_MANTENIMIENTO').length, color: '#D97706' },
@@ -57,8 +58,7 @@ export function calcularDashboard(datos: DatosDashboard, filtro: FiltroDashboard
       const registros = seleccionados.filter(v => v.periodo?.mes === i + 1);
       return [{ etiqueta, costo: registros.reduce((s, { m }) => s + centavos(m), 0) / 100, cantidad: registros.length }];
     });
-  return { filtro: { ...filtro }, periodo: etiquetaPeriodo(filtro), anios, ubicaciones, equipos: equipos.length, estados, inventario, ubicacionesInventario,
-    totalesUbicacion: ubicacionesInventario.map(ubicacion => equipos.filter(e => ubicacionEquipo(e) === ubicacion).length),
+  return { filtro: { ...filtro }, periodo: etiquetaPeriodo(filtro), anios, edificios, equipos: equipos.length, estados, inventario,
     cantidad: seleccionados.length, costo: total, promedio: seleccionados.length ? total / seleccionados.length : 0,
     historico: historial.reduce((s, m) => s + centavos(m), 0) / 100,
     sinFecha: fechados.filter(v => !v.periodo).length, resumenAnios, serie };
