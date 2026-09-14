@@ -1,3 +1,4 @@
+import { validarFechasMantenimiento } from '../../utils/fechas';
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, Wrench, AlertCircle } from 'lucide-react';
 import type { MaintenanceType, CrearMantenimientoDTO } from '../../types/Maintenance';
@@ -128,6 +129,11 @@ export const ModalCrearMantenimiento: React.FC<ModalCrearMantenimientoProps> = (
     e.preventDefault();
     setErrorMessage(null);
 
+    const errorFechas = validarFechasMantenimiento(formData.fecha, formData.fechaEntrega, equipo.fechaAdquisicion);
+    if (errorFechas) {
+      setErrorMessage(errorFechas);
+      return;
+    }
     const costoNum = parseFloat(formData.costo);
     if (isNaN(costoNum) || costoNum < 0) {
       setErrorMessage('El costo debe ser un número mayor o igual a 0.');
@@ -275,7 +281,7 @@ export const ModalCrearMantenimiento: React.FC<ModalCrearMantenimientoProps> = (
                   <input
                     type="datetime-local"
                     id="fecha"
-                    name="fecha"
+                    name="fecha" min={equipo.fechaAdquisicion.slice(0, 10) + "T00:00"} max={formData.fechaEntrega || undefined}
                     value={formData.fecha}
                     onChange={handleChange}
                     disabled={isSubmitting}
@@ -291,7 +297,7 @@ export const ModalCrearMantenimiento: React.FC<ModalCrearMantenimientoProps> = (
                   <input
                     type="datetime-local"
                     id="fechaEntrega"
-                    name="fechaEntrega"
+                    name="fechaEntrega" min={formData.fecha && formData.fecha.slice(0, 10) >= equipo.fechaAdquisicion.slice(0, 10) ? formData.fecha : equipo.fechaAdquisicion.slice(0, 10) + "T00:00"}
                     value={formData.fechaEntrega}
                     onChange={handleChange}
                     disabled={isSubmitting}

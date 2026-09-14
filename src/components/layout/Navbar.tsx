@@ -65,7 +65,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-100 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10 gap-3">
+    <header className="h-16 shrink-0 bg-white border-b border-slate-100 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10 gap-3">
       <div className="flex items-center gap-3 flex-1 max-w-md">
         <button
           type="button"

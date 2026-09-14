@@ -14,6 +14,8 @@ import { normalizeApiError, type UiError } from "../../services/problem-details"
 import { ErrorDialog } from "./ErrorDialog";
 import { runSingleSubmit } from "../../utils/single-submit";
 
+import { fechaActualLocal, validarFechaAdquisicion } from "../../utils/fechas";
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -28,7 +30,7 @@ const estadoInicial: CrearEquipoDTO = {
   modelo: "",
   serialEquipo: "",
   estado: "ACTIVO",
-  fechaAdquisicion: new Date().toISOString().split("T")[0],
+  fechaAdquisicion: fechaActualLocal(),
   ubicacionId: "",
   categoriaId: "",
 };
@@ -95,12 +97,12 @@ export function ModalCrearEquipo({
         estado: equipoAEditar.estado || "ACTIVO",
         fechaAdquisicion: equipoAEditar.fechaAdquisicion
           ? equipoAEditar.fechaAdquisicion.split("T")[0]
-          : new Date().toISOString().split("T")[0],
+          : fechaActualLocal(),
         ubicacionId: equipoAEditar.ubicacion?.id || equipoAEditar.ubicacionId || "",
         categoriaId: equipoAEditar.categoria?.id || equipoAEditar.categoriaId || "",
       });
     } else {
-      setFormData(estadoInicial);
+      setFormData({ ...estadoInicial, fechaAdquisicion: fechaActualLocal() });
     }
   }, [equipoAEditar, isOpen]);
 
@@ -120,6 +122,11 @@ export function ModalCrearEquipo({
   };
 
   const saveEquipo = async () => {
+    const errorFecha = validarFechaAdquisicion(formData.fechaAdquisicion);
+    if (errorFecha) {
+      setSubmitError({ title: "Revisa la fecha de adquisición", detail: errorFecha, code: "VALIDATION_ERROR", fieldErrors: { fechaAdquisicion: errorFecha }, field: "fechaAdquisicion", kind: "validation", canRetry: false });
+      return;
+    }
     try {
       await runSingleSubmit(submittingRef, setGuardando, async () => {
         setSubmitError(null);
@@ -275,7 +282,7 @@ export function ModalCrearEquipo({
               <input
                 id="fechaAdquisicion"
                 type="date"
-                name="fechaAdquisicion"
+                name="fechaAdquisicion" max={fechaActualLocal()}
                 required
                 value={formData.fechaAdquisicion}
                 onChange={handleChange}

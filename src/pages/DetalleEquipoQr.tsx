@@ -446,7 +446,7 @@ export function DetalleEquipoQr() {
           onMantenimientoCreado={cargarDatos}
         />
       )}
-      {editando && <ModalEditarMantenimiento isOpen mantenimiento={editando} onClose={() => setEditando(null)} onActualizado={(actualizado) => { setHistorial((lista) => lista.map((item) => item.id === actualizado.id ? actualizado : item)); setNotificacion({ tipo: 'ok', texto: 'Mantenimiento actualizado correctamente.' }); }} />}
+      {editando && <ModalEditarMantenimiento isOpen fechaAdquisicion={equipo.fechaAdquisicion} mantenimiento={editando} onClose={() => setEditando(null)} onActualizado={(actualizado) => { setHistorial((lista) => lista.map((item) => item.id === actualizado.id ? actualizado : item)); setNotificacion({ tipo: 'ok', texto: 'Mantenimiento actualizado correctamente.' }); }} />}
       <ModalConfirmar isOpen={Boolean(eliminando)} onClose={() => !procesandoEliminacion && setEliminando(null)} onConfirm={confirmarEliminacion} cargando={procesandoEliminacion} titulo="Eliminar mantenimiento" mensaje={eliminando ? `¿Desea eliminar permanentemente el mantenimiento #${eliminando.numeroReporte}? Esta acción también eliminará sus archivos adjuntos.` : ''} textoConfirmar="Eliminar permanentemente" />
     </div>
   );

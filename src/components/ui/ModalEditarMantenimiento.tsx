@@ -1,3 +1,4 @@
+import { validarFechasMantenimiento } from '../../utils/fechas';
 import { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, Pencil, X } from 'lucide-react';
 
@@ -9,6 +10,7 @@ import type { UserResponse } from '../../types/Usuario';
 
 interface Props {
   isOpen: boolean;
+  fechaAdquisicion: string;
   mantenimiento: MaintenanceResponse;
   onClose: () => void;
   onActualizado: (mantenimiento: MaintenanceResponse) => void | Promise<void>;
@@ -25,7 +27,7 @@ const toLocalInput = (value?: string | null) => value ? value.slice(0, 16) : '';
 const toLocalIso = (value: string) => value.length === 16 ? `${value}:00` : value;
 const optional = (value: string) => value.trim() || null;
 
-export function ModalEditarMantenimiento({ isOpen, mantenimiento, onClose, onActualizado }: Props) {
+export function ModalEditarMantenimiento({ isOpen, mantenimiento, fechaAdquisicion, onClose, onActualizado }: Props) {
   const [form, setForm] = useState<FormState>(() => ({
     responsableId: mantenimiento.responsableId || '', tipo: mantenimiento.tipo,
     solicitanteNombre: mantenimiento.solicitanteNombre, solicitanteCorreo: mantenimiento.solicitanteCorreo,
@@ -59,7 +61,8 @@ export function ModalEditarMantenimiento({ isOpen, mantenimiento, onClose, onAct
     setError(null);
     const costo = Number(form.costo);
     if (!Number.isFinite(costo) || costo < 0) return setError('El costo debe ser mayor o igual a cero.');
-    if (form.fechaEntrega && form.fecha > form.fechaEntrega) return setError('La fecha de solicitud no puede ser posterior a la fecha de entrega.');
+    const errorFechas = validarFechasMantenimiento(form.fecha, form.fechaEntrega, fechaAdquisicion);
+    if (errorFechas) return setError(errorFechas);
     const payload: ActualizarMantenimientoDTO = {
       responsableId: optional(form.responsableId), tipo: form.tipo,
       solicitanteNombre: form.solicitanteNombre.trim(), solicitanteCorreo: form.solicitanteCorreo.trim(),
@@ -91,8 +94,8 @@ export function ModalEditarMantenimiento({ isOpen, mantenimiento, onClose, onAct
           {error && <div className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
           <section><h3 className="mb-4 border-b border-slate-100 pb-2 text-sm font-medium">Información general</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div><label className={label}>Tipo *</label><select name="tipo" value={form.tipo} onChange={update} className={input}><option value="PREVENTIVO">PREVENTIVO</option><option value="CORRECTIVO">CORRECTIVO</option></select></div>
-            <div><label className={label}>Fecha de solicitud *</label><input required type="datetime-local" name="fecha" value={form.fecha} onChange={update} className={input} /></div>
-            <div><label className={label}>Fecha de entrega</label><input type="datetime-local" name="fechaEntrega" value={form.fechaEntrega} onChange={update} className={input} /></div>
+            <div><label className={label}>Fecha de solicitud *</label><input required type="datetime-local" name="fecha" min={fechaAdquisicion.slice(0, 10) + "T00:00"} max={form.fechaEntrega || undefined} value={form.fecha} onChange={update} className={input} /></div>
+            <div><label className={label}>Fecha de entrega</label><input type="datetime-local" name="fechaEntrega" min={form.fecha && form.fecha.slice(0, 10) >= fechaAdquisicion.slice(0, 10) ? form.fecha : fechaAdquisicion.slice(0, 10) + "T00:00"} value={form.fechaEntrega} onChange={update} className={input} /></div>
             <div><label className={label}>Sede</label><div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{mantenimiento.sede}</div></div>
             <div><label className={label}>Unidad *</label><input required maxLength={150} name="unidad" value={form.unidad} onChange={update} className={input} /></div>
             <div><label className={label}>Técnico responsable</label><select name="responsableId" value={form.responsableId} onChange={update} className={input}><option value="">Sin asignar</option>{usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre} ({u.correo})</option>)}</select></div>
