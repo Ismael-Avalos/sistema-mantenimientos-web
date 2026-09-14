@@ -1,5 +1,5 @@
-import { useRef, useEffect } from "react";
-import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
+import { useRef, useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { X, Download, Laptop, MapPin, Tag, QrCode } from "lucide-react";
 import type { Equipo } from "../../types/Equipo";
 
@@ -12,7 +12,9 @@ interface ModalQrEquipoProps {
 const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 
 export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
+  const [descargando, setDescargando] = useState(false);
+  const [errorDescarga, setErrorDescarga] = useState<string | null>(null);
 
   // Cerrar modal al presionar la tecla Escape
   useEffect(() => {
@@ -34,15 +36,47 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
   const qrUrl = `${baseUrl}/mantenimiento/qr/${uuid}`;
 
   // Descarga del QR como archivo PNG
-  const handleDownload = () => {
-    const canvas = canvasRef.current?.querySelector("canvas");
-    if (!canvas) return;
-
-    const image = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = `QR-${equipo.codigoInventario}.png`;
-    link.click();
+  const handleDownload = async () => {
+    const svg = qrRef.current?.querySelector("svg");
+    if (!svg || descargando) return;
+    setDescargando(true);
+    setErrorDescarga(null);
+    try {
+      // Incrustar el logo evita que la exportación dependa de imágenes externas.
+      const response = await fetch(`${import.meta.env.BASE_URL}android-chrome-512x512.png`);
+      if (!response.ok) throw new Error("No se pudo cargar el logo");
+      const blob = await response.blob();
+      const logo = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      const copia = svg.cloneNode(true) as SVGSVGElement;
+      copia.setAttribute("width", "1050");
+      copia.setAttribute("height", "1050");
+      const imagenLogo = copia.querySelector("image");
+      imagenLogo?.setAttribute("href", logo);
+      imagenLogo?.setAttributeNS("http://www.w3.org/1999/xlink", "href", logo);
+      const image = new Image();
+      image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(copia))}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1050;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("No se pudo generar el PNG");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, 1050, 1050);
+      context.drawImage(image, 0, 0, 1050, 1050);
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `QR-${equipo.codigoInventario}.png`;
+      link.click();
+    } catch {
+      setErrorDescarga("No se pudo descargar el QR con el logo. Intenta nuevamente.");
+    } finally {
+      setDescargando(false);
+    }
   };
 
   return (
@@ -85,18 +119,19 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
             </p>
 
             {/* Visualización vectorial del QR */}
-            <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
+            <div ref={qrRef} className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
               <QRCodeSVG
                 value={qrUrl}
                 size={160}
                 level="H" // Corrección de errores alta por si se daña físicamente la etiqueta
-                includeMargin={false}
+                marginSize={4}
+                imageSettings={{
+                  src: `${import.meta.env.BASE_URL}android-chrome-512x512.png`,
+                  width: 28,
+                  height: 28,
+                  excavate: true,
+                }}
               />
-            </div>
-
-            {/* Canvas Oculto para exportación limpia a PNG */}
-            <div className="hidden" ref={canvasRef}>
-              <QRCodeCanvas value={qrUrl} size={350} level="H" />
             </div>
 
             {/* Datos complementarios del activo */}
@@ -120,6 +155,7 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
           </div>
         </div>
 
+        {errorDescarga && <p role="alert" className="px-5 pb-3 text-sm text-red-700">{errorDescarga}</p>}
         {/* Botones de Acción (Pie Fijo) */}
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 px-5 py-4 bg-slate-50 border-t border-slate-100 shrink-0">
           <button
@@ -132,10 +168,11 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
           <button
             type="button"
             onClick={handleDownload}
+            disabled={descargando}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
           >
             <Download className="w-4 h-4" />
-            <span>Descargar PNG</span>
+            <span>{descargando ? "Generando PNG..." : "Descargar PNG"}</span>
           </button>
         </div>
 

@@ -85,7 +85,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
               onChange={(event) => handleChange(event.target.value)}
               placeholder={contexto.placeholder}
               aria-label={contexto.placeholder}
-              className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-colors"
+              className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-colors [&::-webkit-search-cancel-button]:appearance-none"
             />
             {valorBusqueda && (
               <button
