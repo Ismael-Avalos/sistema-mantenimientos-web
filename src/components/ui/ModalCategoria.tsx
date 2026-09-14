@@ -78,20 +78,20 @@ export function ModalCategoria({
       onClick={(event) => { if (event.currentTarget === event.target && !submitError) onClose(); }}
     >
       <div 
-        className="bg-white rounded-2xl border border-slate-100 shadow-xl w-full max-w-md overflow-hidden"
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xl w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-categoria-title"
       >
         {/* Encabezado */}
-        <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-100">
-          <h2 id="modal-categoria-title" className="font-bold text-slate-800 text-lg">
+        <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+          <h2 id="modal-categoria-title" className="font-bold text-slate-800 dark:text-slate-100 text-lg">
             {categoriaAEditar ? "Editar Categoría" : "Nueva Categoría"}
           </h2>
           <button 
             onClick={onClose} 
-            className="text-slate-400 hover:text-slate-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+            className="text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             aria-label="Cerrar modal"
           >
             <X className="w-5 h-5" />
@@ -101,7 +101,7 @@ export function ModalCategoria({
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4">
           <div>
-            <label htmlFor="nombre-categoria" className="block text-xs font-semibold text-slate-600 mb-1">
+            <label htmlFor="nombre-categoria" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
               Nombre de la categoría *
             </label>
             <input
@@ -113,13 +113,13 @@ export function ModalCategoria({
               aria-invalid={Boolean(submitError?.fieldErrors.nombre || submitError?.field === "nombre-categoria")}
               aria-describedby={submitError?.fieldErrors.nombre ? "nombre-categoria-error" : undefined}
               placeholder="Ej: Laptops, Redes, Herramientas..."
-              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 min-h-[44px]"
+              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20 focus:border-red-800 min-h-[44px]"
             />
-            {submitError?.fieldErrors.nombre && <p id="nombre-categoria-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.nombre}</p>}
+            {submitError?.fieldErrors.nombre && <p id="nombre-categoria-error" role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{submitError.fieldErrors.nombre}</p>}
           </div>
 
           <div>
-            <label htmlFor="descripcion-categoria" className="block text-xs font-semibold text-slate-600 mb-1">
+            <label htmlFor="descripcion-categoria" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
               Descripción
             </label>
             <textarea
@@ -128,7 +128,7 @@ export function ModalCategoria({
               onChange={(e) => setDescripcion(e.target.value)}
               rows={3}
               placeholder="Descripción opcional..."
-              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800"
+              className="w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20 focus:border-red-800"
             />
           </div>
 
@@ -137,14 +137,14 @@ export function ModalCategoria({
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={guardando}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 disabled:opacity-50 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400"
             >
               {guardando && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{categoriaAEditar ? "Guardar cambios" : "Crear Categoría"}</span>

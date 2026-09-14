@@ -159,18 +159,18 @@ export function ModalCrearEquipo({
       aria-modal="true"
       aria-labelledby="modal-equipo-titulo"
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
         
         {/* Encabezado fijo */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
-          <h2 id="modal-equipo-titulo" className="text-base sm:text-lg font-bold text-slate-800">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+          <h2 id="modal-equipo-titulo" className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
             {equipoAEditar ? "Editar Equipo" : "Agregar Nuevo Equipo"}
           </h2>
           <button 
             type="button"
             onClick={onClose} 
             aria-label="Cerrar modal"
-            className="p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+            className="p-2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400"
           >
             <X className="w-5 h-5" />
           </button>
@@ -181,7 +181,7 @@ export function ModalCrearEquipo({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             
             <div>
-              <label htmlFor="codigoInventario" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="codigoInventario" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Cód. Inventario *
               </label>
               <input
@@ -193,13 +193,13 @@ export function ModalCrearEquipo({
                 onChange={handleChange}
                 aria-invalid={Boolean(submitError?.fieldErrors.codigoInventario || submitError?.field === "codigoInventario")}
                 aria-describedby={submitError?.fieldErrors.codigoInventario ? "codigoInventario-error" : undefined}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               />
-              {submitError?.fieldErrors.codigoInventario && <p id="codigoInventario-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.codigoInventario}</p>}
+              {submitError?.fieldErrors.codigoInventario && <p id="codigoInventario-error" role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{submitError.fieldErrors.codigoInventario}</p>}
             </div>
 
             <div>
-              <label htmlFor="nombre" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="nombre" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Nombre *
               </label>
               <input
@@ -209,12 +209,12 @@ export function ModalCrearEquipo({
                 required
                 value={formData.nombre}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               />
             </div>
 
             <div>
-              <label htmlFor="marca" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="marca" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Marca
               </label>
               <input
@@ -223,12 +223,12 @@ export function ModalCrearEquipo({
                 name="marca"
                 value={formData.marca}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               />
             </div>
 
             <div>
-              <label htmlFor="modelo" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="modelo" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Modelo
               </label>
               <input
@@ -237,12 +237,12 @@ export function ModalCrearEquipo({
                 name="modelo"
                 value={formData.modelo}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               />
             </div>
 
             <div>
-              <label htmlFor="serialEquipo" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="serialEquipo" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Nº Serie
               </label>
               <input
@@ -253,13 +253,13 @@ export function ModalCrearEquipo({
                 onChange={handleChange}
                 aria-invalid={Boolean(submitError?.fieldErrors.serialEquipo || submitError?.field === "serialEquipo")}
                 aria-describedby={submitError?.fieldErrors.serialEquipo ? "serialEquipo-error" : undefined}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               />
-              {submitError?.fieldErrors.serialEquipo && <p id="serialEquipo-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.serialEquipo}</p>}
+              {submitError?.fieldErrors.serialEquipo && <p id="serialEquipo-error" role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{submitError.fieldErrors.serialEquipo}</p>}
             </div>
 
             <div>
-              <label htmlFor="estado" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="estado" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Estado
               </label>
               <select
@@ -267,7 +267,7 @@ export function ModalCrearEquipo({
                 name="estado"
                 value={formData.estado}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               >
                 <option value="ACTIVO">ACTIVO</option>
                 <option value="EN_MANTENIMIENTO">EN MANTENIMIENTO</option>
@@ -276,7 +276,7 @@ export function ModalCrearEquipo({
             </div>
 
             <div>
-              <label htmlFor="fechaAdquisicion" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="fechaAdquisicion" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 F. Adquisición *
               </label>
               <input
@@ -286,13 +286,13 @@ export function ModalCrearEquipo({
                 required
                 value={formData.fechaAdquisicion}
                 onChange={handleChange}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700"
               />
             </div>
 
             {/* Selector de Categoría */}
             <div>
-              <label htmlFor="categoriaId" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="categoriaId" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Categoría *
               </label>
               <select
@@ -302,7 +302,7 @@ export function ModalCrearEquipo({
                 value={formData.categoriaId || ""}
                 onChange={handleChange}
                 disabled={cargandoRelaciones}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 disabled:bg-slate-100"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700 disabled:bg-slate-100 dark:disabled:bg-slate-800"
               >
                 <option value="" disabled>
                   {cargandoRelaciones ? "Cargando..." : "Selecciona categoría"}
@@ -317,7 +317,7 @@ export function ModalCrearEquipo({
 
             {/* Selector de Ubicación */}
             <div>
-              <label htmlFor="ubicacionId" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="ubicacionId" className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
                 Ubicación
               </label>
               <select
@@ -326,7 +326,7 @@ export function ModalCrearEquipo({
                 value={formData.ubicacionId || ""}
                 onChange={handleChange}
                 disabled={cargandoRelaciones}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 disabled:bg-slate-100"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-red-700/20 dark:focus:ring-red-400/20 focus:border-red-700 disabled:bg-slate-100 dark:disabled:bg-slate-800"
               >
                 <option value="">
                   {cargandoRelaciones ? "Cargando..." : "Sin ubicación"}
@@ -342,18 +342,18 @@ export function ModalCrearEquipo({
           </div>
 
           {/* Footer de Acciones */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={guardando}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl disabled:opacity-50 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl disabled:opacity-50 transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400"
             >
               {guardando ? (
                 <>

@@ -93,18 +93,18 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
       aria-modal="true"
       aria-labelledby="modal-crear-usuario-titulo"
     >
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
         
         {/* Encabezado Fijo */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
-          <h2 id="modal-crear-usuario-titulo" className="text-base sm:text-lg font-bold text-slate-800">
+        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+          <h2 id="modal-crear-usuario-titulo" className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100">
             Agregar Usuario
           </h2>
           <button 
             type="button"
             onClick={onClose} 
             aria-label="Cerrar modal"
-            className="p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
@@ -113,13 +113,13 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
         {/* Formulario Scrolleable */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {contextualError && (
-            <div role="alert" className="p-3 text-xs bg-red-50 text-red-700 rounded-xl border border-red-100 font-medium">
+            <div role="alert" className="p-3 text-xs bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 rounded-xl border border-red-100 dark:border-red-900 font-medium">
               {contextualError}
             </div>
           )}
 
           <div>
-            <label htmlFor="nombre" className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+            <label htmlFor="nombre" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
               Nombre Completo *
             </label>
             <input
@@ -129,12 +129,12 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej. Juan Pérez"
-              className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20"
+              className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20"
             />
           </div>
 
           <div>
-            <label htmlFor="correo" className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+            <label htmlFor="correo" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
               Correo Electrónico *
             </label>
             <input
@@ -146,13 +146,13 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
               aria-invalid={Boolean(submitError?.fieldErrors.correo || submitError?.field === "correo")}
               aria-describedby={submitError?.fieldErrors.correo ? "correo-error" : undefined}
               placeholder="correo@ejemplo.com"
-              className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20"
+              className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20"
             />
-            {submitError?.fieldErrors.correo && <p id="correo-error" role="alert" className="mt-1 text-xs text-red-700">{submitError.fieldErrors.correo}</p>}
+            {submitError?.fieldErrors.correo && <p id="correo-error" role="alert" className="mt-1 text-xs text-red-700 dark:text-red-300">{submitError.fieldErrors.correo}</p>}
           </div>
 
           <div>
-            <label htmlFor="contrasena" className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+            <label htmlFor="contrasena" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
               Contraseña Temporal *
             </label>
             <input
@@ -166,15 +166,15 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
               value={contrasena}
               onChange={(e) => setContrasena(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20"
+              className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20"
             />
-            <p id="contrasena-temporal-ayuda" className="mt-1 text-xs text-slate-500">
+            <p id="contrasena-temporal-ayuda" className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Entre 8 y 128 caracteres. Puede contener solo números, letras o símbolos.
             </p>
           </div>
 
           <div>
-            <label htmlFor="rolId" className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+            <label htmlFor="rolId" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
               Rol *
             </label>
             <select
@@ -183,7 +183,7 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
               value={rolId}
               onChange={(e) => setRolId(e.target.value)}
               disabled={cargandoRoles}
-              className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20 bg-white text-slate-700 disabled:bg-slate-100"
+              className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:border-red-800 focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 disabled:bg-slate-100 dark:disabled:bg-slate-800"
             >
               <option value="" disabled>
                 {cargandoRoles ? "Cargando roles..." : "-- Selecciona un rol --"}
@@ -197,18 +197,18 @@ export function ModalCrearUsuario({ isOpen, onClose, onUsuarioCreado }: ModalCre
           </div>
 
           {/* Acciones de Pie Fijo */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={guardando || cargandoRoles}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-50 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400"
             >
               {guardando ? (
                 <>

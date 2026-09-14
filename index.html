@@ -3,6 +3,16 @@
   <head>
     <meta name="theme-color" content="#ffffff" />
     <meta charset="UTF-8" />
+    <script>
+      // Aplicar el tema antes del primer render evita un destello claro.
+      (() => {
+        let theme = 'system';
+        try { theme = localStorage.getItem('mantenimientos-theme') || 'system'; } catch {}
+        const dark = theme === 'dark' || (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      })();
+    </script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

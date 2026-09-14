@@ -7,7 +7,7 @@ export const ProtectedRoute = () => {
 
   if (isInitializing) {
     return (
-      <div className="min-h-dvh bg-slate-50 flex items-center justify-center" role="status">
+      <div className="min-h-dvh bg-slate-50 dark:bg-slate-950 flex items-center justify-center" role="status">
         <div className="w-9 h-9 border-4 border-red-800 border-t-transparent rounded-full animate-spin" />
         <span className="sr-only">Restaurando sesión...</span>
       </div>

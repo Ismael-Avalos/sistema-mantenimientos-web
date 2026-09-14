@@ -86,19 +86,19 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
       aria-modal="true"
       aria-labelledby="modal-qr-titulo"
     >
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl max-w-sm w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-2xl max-w-sm w-full max-h-[90vh] flex flex-col overflow-hidden">
         
         {/* Encabezado Fijo */}
-        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
-          <div className="flex items-center gap-2 text-slate-800 font-bold">
-            <QrCode className="w-5 h-5 text-red-800" />
+        <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shrink-0">
+          <div className="flex items-center gap-2 text-slate-800 dark:text-slate-100 font-bold">
+            <QrCode className="w-5 h-5 text-red-800 dark:text-red-300" />
             <h2 id="modal-qr-titulo" className="text-base sm:text-lg">Código QR de Activo</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar modal de código QR"
-            className="p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
@@ -106,15 +106,15 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
 
         {/* Tarjeta / Vista previa del Sticker (Scrolleable en pantallas muy pequeñas) */}
         <div className="p-4 sm:p-6 text-center space-y-4 overflow-y-auto flex-1">
-          <div className="border-2 border-dashed border-slate-200 p-4 sm:p-5 rounded-2xl bg-slate-50/50 flex flex-col items-center">
+          <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 p-4 sm:p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-950/50 flex flex-col items-center">
             
-            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
+            <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-400 tracking-wider mb-1">
               Control de Activos
             </p>
-            <h3 className="text-base font-bold text-slate-800 line-clamp-1">
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 line-clamp-1">
               {equipo.nombre}
             </h3>
-            <p className="font-mono text-xs font-semibold text-red-800 mb-4">
+            <p className="font-mono text-xs font-semibold text-red-800 dark:text-red-300 mb-4">
               {equipo.codigoInventario}
             </p>
 
@@ -135,18 +135,18 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
             </div>
 
             {/* Datos complementarios del activo */}
-            <div className="mt-4 text-xs text-slate-500 space-y-1.5 w-full text-left bg-white p-3 rounded-xl border border-slate-100">
+            <div className="mt-4 text-xs text-slate-500 dark:text-slate-400 space-y-1.5 w-full text-left bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <Laptop className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <Laptop className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
                 <span className="truncate">{equipo.marca} {equipo.modelo}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <Tag className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
                 <span className="truncate">S/N: {equipo.serialEquipo || "Sin serie"}</span>
               </div>
               {equipo.ubicacion && (
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-red-800 shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 text-red-800 dark:text-red-300 shrink-0" />
                   <span className="truncate">{equipo.ubicacion.nombre}</span>
                 </div>
               )}
@@ -155,13 +155,13 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
           </div>
         </div>
 
-        {errorDescarga && <p role="alert" className="px-5 pb-3 text-sm text-red-700">{errorDescarga}</p>}
+        {errorDescarga && <p role="alert" className="px-5 pb-3 text-sm text-red-700 dark:text-red-300">{errorDescarga}</p>}
         {/* Botones de Acción (Pie Fijo) */}
-        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 px-5 py-4 bg-slate-50 border-t border-slate-100 shrink-0">
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 px-5 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+            className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 rounded-xl transition-colors min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
           >
             Cerrar
           </button>
@@ -169,7 +169,7 @@ export function ModalQrEquipo({ isOpen, onClose, equipo }: ModalQrEquipoProps) {
             type="button"
             onClick={handleDownload}
             disabled={descargando}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-xl transition-colors shadow-sm min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400"
           >
             <Download className="w-4 h-4" />
             <span>{descargando ? "Generando PNG..." : "Descargar PNG"}</span>

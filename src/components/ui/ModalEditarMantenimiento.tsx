@@ -81,31 +81,31 @@ export function ModalEditarMantenimiento({ isOpen, mantenimiento, fechaAdquisici
     } finally { setGuardando(false); }
   };
 
-  const input = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-red-700 focus:outline-none focus:ring-1 focus:ring-red-700 disabled:bg-slate-50';
-  const label = 'mb-1 block text-xs font-medium text-slate-700';
+  const input = 'w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:border-red-700 focus:outline-none focus:ring-1 focus:ring-red-700 dark:focus:ring-red-400 disabled:bg-slate-50 dark:disabled:bg-slate-950';
+  const label = 'mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200';
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3 sm:p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
-    <div className="flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3"><span className="rounded-lg bg-red-50 p-2 text-red-700"><Pencil className="h-5 w-5" /></span><div className="min-w-0"><h2 className="font-semibold text-slate-900">Editar mantenimiento #{mantenimiento.numeroReporte}</h2><p className="truncate text-xs text-slate-500">Sede: {mantenimiento.sede} · Equipo asociado sin cambios</p></div></div>
-        <button type="button" onClick={onClose} disabled={guardando} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+    <div className="flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-xl ring-1 ring-slate-200 dark:ring-slate-700">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-4 py-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3"><span className="rounded-lg bg-red-50 dark:bg-red-950/50 p-2 text-red-700 dark:text-red-300"><Pencil className="h-5 w-5" /></span><div className="min-w-0"><h2 className="font-semibold text-slate-900 dark:text-slate-100">Editar mantenimiento #{mantenimiento.numeroReporte}</h2><p className="truncate text-xs text-slate-500 dark:text-slate-400">Sede: {mantenimiento.sede} · Equipo asociado sin cambios</p></div></div>
+        <button type="button" onClick={onClose} disabled={guardando} className="rounded-lg p-2 text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Cerrar"><X className="h-5 w-5" /></button>
       </div>
       <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
         <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6">
-          {error && <div className="flex gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
-          <section><h3 className="mb-4 border-b border-slate-100 pb-2 text-sm font-medium">Información general</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {error && <div className="flex gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-800 dark:text-red-300"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
+          <section><h3 className="mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 text-sm font-medium">Información general</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div><label className={label}>Tipo *</label><select name="tipo" value={form.tipo} onChange={update} className={input}><option value="PREVENTIVO">PREVENTIVO</option><option value="CORRECTIVO">CORRECTIVO</option></select></div>
             <div><label className={label}>Fecha de solicitud *</label><input required type="datetime-local" name="fecha" min={fechaAdquisicion.slice(0, 10) + "T00:00"} max={form.fechaEntrega || undefined} value={form.fecha} onChange={update} className={input} /></div>
             <div><label className={label}>Fecha de entrega</label><input type="datetime-local" name="fechaEntrega" min={form.fecha && form.fecha.slice(0, 10) >= fechaAdquisicion.slice(0, 10) ? form.fecha : fechaAdquisicion.slice(0, 10) + "T00:00"} value={form.fechaEntrega} onChange={update} className={input} /></div>
-            <div><label className={label}>Sede</label><div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{mantenimiento.sede}</div></div>
+            <div><label className={label}>Sede</label><div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200">{mantenimiento.sede}</div></div>
             <div><label className={label}>Unidad *</label><input required maxLength={150} name="unidad" value={form.unidad} onChange={update} className={input} /></div>
             <div><label className={label}>Técnico responsable</label><select name="responsableId" value={form.responsableId} onChange={update} className={input}><option value="">Sin asignar</option>{usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre} ({u.correo})</option>)}</select></div>
           </div></section>
-          <section><h3 className="mb-4 border-b border-slate-100 pb-2 text-sm font-medium">Datos del solicitante</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <section><h3 className="mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 text-sm font-medium">Datos del solicitante</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div><label className={label}>Nombre *</label><input required maxLength={150} name="solicitanteNombre" value={form.solicitanteNombre} onChange={update} className={input} /></div>
             <div><label className={label}>Correo *</label><input required type="email" maxLength={150} name="solicitanteCorreo" value={form.solicitanteCorreo} onChange={update} className={input} /></div>
             <div><label className={label}>Teléfono</label><input type="tel" maxLength={30} name="solicitanteTelefono" value={form.solicitanteTelefono} onChange={update} className={input} /></div>
           </div></section>
-          <section><h3 className="mb-4 border-b border-slate-100 pb-2 text-sm font-medium">Detalle del mantenimiento</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section><h3 className="mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 text-sm font-medium">Detalle del mantenimiento</h3><div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div><label className={label}>Descripción de falla *</label><textarea required rows={3} name="descripcionFalla" value={form.descripcionFalla} onChange={update} className={input} /></div>
             <div><label className={label}>Actividades realizadas *</label><textarea required rows={3} name="actividadesRealizadas" value={form.actividadesRealizadas} onChange={update} className={input} /></div>
             <div><label className={label}>Observaciones técnicas</label><textarea rows={2} name="observacionesTecnicas" value={form.observacionesTecnicas} onChange={update} className={input} /></div>
@@ -113,7 +113,7 @@ export function ModalEditarMantenimiento({ isOpen, mantenimiento, fechaAdquisici
             <div><label className={label}>Costo ($) *</label><input required type="number" min="0" step="0.01" name="costo" value={form.costo} onChange={update} className={input} /></div>
           </div></section>
         </div>
-        <div className="flex flex-col-reverse gap-2 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:justify-end sm:px-6"><button type="button" onClick={onClose} disabled={guardando} className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700">Cancelar</button><button disabled={guardando} className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50">{guardando && <Loader2 className="h-4 w-4 animate-spin" />}{guardando ? 'Guardando...' : 'Guardar cambios'}</button></div>
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-4 sm:flex-row sm:justify-end sm:px-6"><button type="button" onClick={onClose} disabled={guardando} className="min-h-11 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200">Cancelar</button><button disabled={guardando} className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50">{guardando && <Loader2 className="h-4 w-4 animate-spin" />}{guardando ? 'Guardando...' : 'Guardar cambios'}</button></div>
       </form>
     </div>
   </div>;

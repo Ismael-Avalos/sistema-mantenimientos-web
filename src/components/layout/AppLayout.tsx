@@ -20,7 +20,7 @@ export function AppLayout() {
   }, []);
 
   return (
-    <div className="flex min-h-dvh bg-slate-50/50 font-sans antialiased text-slate-800 overflow-x-hidden">
+    <div className="flex min-h-dvh bg-slate-50/50 dark:bg-slate-950/50 font-sans antialiased text-slate-800 dark:text-slate-100 overflow-x-hidden">
       {/* Sidebar Fijo / Drawer Responsive */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -31,7 +31,7 @@ export function AppLayout() {
         {accessDeniedMessage && (
           <div
             role="alert"
-            className="mx-4 mt-4 sm:mx-6 sm:mt-6 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"
+            className="mx-4 mt-4 sm:mx-6 sm:mt-6 flex items-center justify-between gap-3 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/50 px-4 py-3 text-xs text-amber-800 dark:text-amber-300"
           >
             <span className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -41,7 +41,7 @@ export function AppLayout() {
               type="button"
               onClick={() => setAccessDeniedMessage(null)}
               aria-label="Cerrar aviso"
-              className="p-1 rounded-md hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700"
+              className="p-1 rounded-md hover:bg-amber-100 dark:hover:bg-amber-950/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 dark:focus-visible:ring-amber-400"
             >
               <X className="w-4 h-4" />
             </button>

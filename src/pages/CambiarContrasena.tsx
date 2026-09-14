@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ThemeSelector } from '../components/ui/ThemeSelector';
 import { useNavigate } from 'react-router-dom';
 import { KeyRound, Lock, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from "@/hooks/useAuth";
@@ -57,18 +58,19 @@ export const CambiarContrasena: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-100 shadow-xl p-6 sm:p-8 space-y-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xl p-6 sm:p-8 space-y-6">
+        <div className="flex justify-end"><ThemeSelector /></div>
         
         {/* Encabezado */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-12 h-12 bg-amber-500/10 text-amber-700 rounded-xl flex items-center justify-center border border-amber-200">
+          <div className="w-12 h-12 bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded-xl flex items-center justify-center border border-amber-200 dark:border-amber-900">
             <KeyRound className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-bold text-slate-800">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             Primer Inicio de Sesión
           </h1>
-          <p className="text-xs text-slate-500 max-w-xs">
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
             Por seguridad de tu cuenta, debes establecer una nueva contraseña personal para continuar.
           </p>
         </div>
@@ -78,7 +80,7 @@ export const CambiarContrasena: React.FC = () => {
           <div 
             role="alert"
             aria-live="assertive"
-            className="flex items-center gap-2 bg-rose-50 border border-rose-100 text-rose-700 text-xs p-3.5 rounded-xl"
+            className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/50 border border-rose-100 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs p-3.5 rounded-xl"
           >
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
@@ -88,11 +90,11 @@ export const CambiarContrasena: React.FC = () => {
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="contrasena-actual" className="block text-xs font-medium text-slate-700 mb-1">
+            <label htmlFor="contrasena-actual" className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
               Contraseña actual *
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 pointer-events-none" />
               <input
                 id="contrasena-actual"
                 type={mostrarActual ? "text" : "password"}
@@ -100,12 +102,12 @@ export const CambiarContrasena: React.FC = () => {
                 autoComplete="current-password"
                 value={contrasenaActual}
                 onChange={(event) => setContrasenaActual(event.target.value)}
-                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 text-slate-800 min-h-[44px]"
+                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20 focus:border-red-800 text-slate-800 dark:text-slate-100 min-h-[44px]"
               />
               <button
                 type="button"
                 onClick={() => setMostrarActual(!mostrarActual)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center"
                 aria-label={mostrarActual ? "Ocultar contraseña actual" : "Mostrar contraseña actual"}
               >
                 {mostrarActual ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -114,11 +116,11 @@ export const CambiarContrasena: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="nueva-contrasena" className="block text-xs font-medium text-slate-700 mb-1">
+            <label htmlFor="nueva-contrasena" className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
               Nueva Contraseña *
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 pointer-events-none" />
               <input
                 id="nueva-contrasena"
                 type={mostrarNueva ? "text" : "password"}
@@ -130,28 +132,28 @@ export const CambiarContrasena: React.FC = () => {
                 onChange={(e) => setNuevaContrasena(e.target.value)}
                 placeholder="Entre 8 y 128 caracteres"
                 aria-describedby="nueva-contrasena-ayuda"
-                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 text-slate-800 transition-all placeholder:text-slate-400 min-h-[44px]"
+                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20 focus:border-red-800 text-slate-800 dark:text-slate-100 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-400 min-h-[44px]"
               />
               <button
                 type="button"
                 onClick={() => setMostrarNueva(!mostrarNueva)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-800/20 min-w-[36px] min-h-[36px] flex items-center justify-center"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-800/20 dark:focus-visible:ring-red-400/20 min-w-[36px] min-h-[36px] flex items-center justify-center"
                 aria-label={mostrarNueva ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {mostrarNueva ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p id="nueva-contrasena-ayuda" className="mt-1 text-xs text-slate-500">
+            <p id="nueva-contrasena-ayuda" className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Incluye al menos una letra y un número. No se requieren mayúsculas ni símbolos.
             </p>
           </div>
 
           <div>
-            <label htmlFor="confirmar-contrasena" className="block text-xs font-medium text-slate-700 mb-1">
+            <label htmlFor="confirmar-contrasena" className="block text-xs font-medium text-slate-700 dark:text-slate-200 mb-1">
               Confirmar Nueva Contraseña *
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-400 pointer-events-none" />
               <input
                 id="confirmar-contrasena"
                 type={mostrarConfirmar ? "text" : "password"}
@@ -162,12 +164,12 @@ export const CambiarContrasena: React.FC = () => {
                 value={confirmarContrasena}
                 onChange={(e) => setConfirmarContrasena(e.target.value)}
                 placeholder="Repite la contraseña"
-                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 focus:border-red-800 text-slate-800 transition-all placeholder:text-slate-400 min-h-[44px]"
+                className="w-full pl-10 pr-11 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-800/20 dark:focus:ring-red-400/20 focus:border-red-800 text-slate-800 dark:text-slate-100 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-400 min-h-[44px]"
               />
               <button
                 type="button"
                 onClick={() => setMostrarConfirmar(!mostrarConfirmar)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-800/20 min-w-[36px] min-h-[36px] flex items-center justify-center"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-800/20 dark:focus-visible:ring-red-400/20 min-w-[36px] min-h-[36px] flex items-center justify-center"
                 aria-label={mostrarConfirmar ? "Ocultar contraseña" : "Mostrar contraseña"}
               >
                 {mostrarConfirmar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -178,7 +180,7 @@ export const CambiarContrasena: React.FC = () => {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-70 mt-2 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700"
+            className="w-full flex items-center justify-center gap-2 bg-red-800 hover:bg-red-900 text-white py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-70 mt-2 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 dark:focus-visible:ring-red-400"
           >
             {cargando ? (
               <>
@@ -197,7 +199,7 @@ export const CambiarContrasena: React.FC = () => {
         <button
           type="button"
           onClick={() => void logout().finally(() => navigate('/login', { replace: true }))}
-          className="w-full text-xs font-medium text-slate-500 hover:text-red-800 py-2"
+          className="w-full text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-800 dark:hover:text-red-300 py-2"
         >
           Cerrar sesión
         </button>

@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root { --chart-line: #991b1b; --chart-grid: #e2e8f0; --chart-label: #64748b; --chart-surface: #ffffff; }
+  :root.dark { --chart-line: #f87171; --chart-grid: #334155; --chart-label: #94a3b8; --chart-surface: #0f172a; }
+  body { @apply bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100; }
+  input, select, textarea { color-scheme: inherit; }
+}
